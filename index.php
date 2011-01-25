@@ -1,4 +1,8 @@
-<?php ?>
+<?php
+require_once("./controllers/controller.php");
+$controller = new Controller();
+$screenName = $controller->screenName;
+?>
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -20,9 +24,11 @@
 	<div>
 		<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
 	</div>
+	<!--
 	<p class="connect">
 	    <span id="login"></span>
 	</p>
+	-->
 	<hr />
 	<p class="follow">
 	    <span id="follow-placeholder"></span>
@@ -36,6 +42,9 @@
 		&copy; <a href="http://eccyan.com">eccyan.com</a> ( <a href="http://twitter.com/kotarochiba">@eccyan</a>) <a href="mailto:g00.eccyan@gmail.com">mail</a>
 	</footer>
 </div>
+<?php if ( empty($screenName) ) { ?>
+<?php } else {    ?>
+<?php }           ?>
 <script type="text/javascript">
     twttr.anywhere(function (T) { T.hovercards();});
 </script>
