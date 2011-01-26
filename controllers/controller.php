@@ -19,17 +19,21 @@ class Controller {
 	$consumer        = new OAuthConsumer($config->key, $config->secret);
 	$signatureMethod = new OAuthSignatureMethod_HMAC_SHA1();
 
-	$anywhereId = $_COOKIE["twitter_anywhere_identity"];
-	$screenName = $_COOKIE["eccyan_com_game_screenName"];
+	// get @Anywhere login value
+	$anywhereId = explode(':', @$_COOKIE["twitter_anywhere_identity"]);
+	$anywhere->id        = @$anywhereId[0];
+	$anywhere->signature = @$anywhereId[1];
+	// for validate anywhere signature
+	$signature = @sha1(@$anywhere->id.$config->secret);
 
 	$connect = memcache_connect('127.0.0.1', 11211);
 	$cache = null;
-	if ( !empty($screenName) ) {
-	    $cache = memcache_get($connect, $screenName);
+	if ( !empty($anywhere->id)  && strcmp($anywhere->signature, $signature) == 0 ) {
+	    $cache = memcache_get($connect, "{$anywhere->id}:{$anywhere->signature}");
 	}
 
 	// Access Token
-	if ( empty($screenName) ) {
+	if ( empty($cache) ) {
 	    $endpoint = 'http://twitter.com/oauth/access_token';
 	    $params = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
 	    $req = OAuthRequest::from_consumer_and_token($consumer, NULL, "GET", $endpoint, $params);
@@ -63,10 +67,12 @@ class Controller {
 
 	    $parsed = OAuthUtil::parse_parameters($responce);
 	    $token      = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
+	    $uid        = $parsed['user_id'];
 	    $screenName = $parsed['screen_name'];
 
-	    memcache_set($connect, $screenName, json_encode($token), 0, 60*60); 
-	    setcookie("eccyan_com_game_screenName", $screenName, time()+86400, '/');
+	    $signature  = @sha1($uid.$config->secret);
+	    memcache_set($connect, "$uid:$signature", json_encode($token), 0, 86400); 
+	    setcookie("twitter_anywhere_identity", "$uid:$signature", null, '/');
 	}
 	else {
 	    $token = json_decode($cache);

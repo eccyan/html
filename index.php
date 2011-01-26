@@ -24,11 +24,9 @@ $screenName = $controller->screenName;
 	<div>
 		<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
 	</div>
-	<!--
 	<p class="connect">
 	    <span id="login"></span>
 	</p>
-	-->
 	<hr />
 	<p class="follow">
 	    <span id="follow-placeholder"></span>
