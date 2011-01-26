@@ -24,9 +24,11 @@ $screenName = $controller->screenName;
 	<div>
 		<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
 	</div>
+	<!--
 	<p class="connect">
 	    <span id="login"></span>
 	</p>
+	-->
 	<hr />
 	<p class="follow">
 	    <span id="follow-placeholder"></span>
@@ -54,13 +56,29 @@ $screenName = $controller->screenName;
 	T("#login").connectButton({
 	    authComplete: function(user) {
 		// triggered when auth completed successfully
-	    	alert(user);
 	    },
 	    signOut: function() {
 		// triggered when user logs out
 	    }
 	});
     });
+
+</script>
+<script type="text/javascript">
+    jQuery(function () {
+	twttr.anywhere(function (T) {
+	if (T.isConnected()) {
+	    $("#login-logout").append('<button id="signout" type="button">Sign out of Twitter</button>');
+	    $("#signout").bind("click", function () {
+		twttr.anywhere.signOut();
+	    });
+
+	}
+	else {
+	    T("#login-logout").connectButton();
+	}
+    });
+});
 
 </script>
 </body>
