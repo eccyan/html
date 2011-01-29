@@ -1,7 +1,4 @@
-<?php
-require_once("./controllers/controller.php");
-$controller = new Controller();
-$screenName = $controller->screenName;
+<?php 
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -9,6 +6,7 @@ $screenName = $controller->screenName;
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 	<script src="http://platform.twitter.com/anywhere.js?id=mGORvgD7zbKiXmysERthw&v=1" type="text/javascript"></script>
+	<script src="js/game.js" type="text/javascript"></script>
 	<!-- <script src="js/draw.js" type="text/javascript"></script> -->
 	<link rel="stylesheet" href="css/common.css" type="text/css" / >
 	<title>えっちゃん.com</title>
