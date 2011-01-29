@@ -1,6 +1,8 @@
 <?php
-require_once('./libs/oauth/OAuth.php');
-require_once('./configs/common.php');
+require_once('/var/www/html/path.php');
+require_once('configs/common.php');
+
+require_once('oauth/OAuth.php');
 
 
 /**
@@ -10,7 +12,6 @@ class Controller {
     protected static $consumer = null;  
     protected static $signatureMethod = null;
     protected static $request = null;
-    var $screenName = null;
     var $token = null;
 
     function __construct() {
@@ -68,7 +69,6 @@ class Controller {
 	    $parsed = OAuthUtil::parse_parameters($responce);
 	    $token      = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
 	    $uid        = $parsed['user_id'];
-	    $screenName = $parsed['screen_name'];
 
 	    $signature  = @sha1($uid.$config->secret);
 	    memcache_set($connect, "$uid:$signature", json_encode($token), 0, 86400); 
@@ -80,7 +80,6 @@ class Controller {
 
 	$this->consumer        = $consumer;
 	$this->signatureMethod = $signatureMethod;
-	$this->screenName      = $screenName;
 	$this->token           = $token;
     }
 
