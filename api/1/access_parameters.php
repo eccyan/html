@@ -1,6 +1,6 @@
 <?php
 /**
- * memcache $B$+$i%H!<%/%s$rFI$_9~$_(B json $B7A<0$G=PNO$9$k(B
+ * memcache からトークンを読み込み json 形式で出力する
  */
 require_once("/var/www/html/path.php");
 require_once("configs/common.php");
