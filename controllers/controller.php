@@ -40,9 +40,9 @@ class Controller {
 	    $req = OAuthRequest::from_consumer_and_token($consumer, NULL, "GET", $endpoint, $params);
 	    $req->sign_request($signatureMethod, $consumer, NULL);
 
-	    $url    = $req->to_url();
-	    $header = array();
-	    $header = explode("\n", $req->to_header());
+	    $url      = $req->to_url();
+	    $header   = array();
+	    $header   = explode("\n", $req->to_header());
 	    $responce = $this->http('GET', $url, $header);
 
 	    // If could not get access_token and colud not get cache
@@ -67,10 +67,10 @@ class Controller {
 	    }
 
 	    $parsed = OAuthUtil::parse_parameters($responce);
-	    $token      = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
-	    $uid        = $parsed['user_id'];
+	    $token  = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
+	    $uid    = $parsed['user_id'];
 
-	    $signature  = @sha1($uid.$config->secret);
+	    $signature = @sha1($uid.$config->secret);
 	    memcache_set($connect, "$uid:$signature", json_encode($token), 0, 86400); 
 	    setcookie("twitter_anywhere_identity", "$uid:$signature", null, '/');
 	}
