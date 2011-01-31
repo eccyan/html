@@ -47,13 +47,13 @@ var twitter = {
 	var url = OAuth.addToURL(message.action, message.parameters);
 	var options = {
 	    type: message.method,
-	    url: this.proxy(url),
+	    url: this.proxy(encodeURIComponent(url)),
 	    dataType: 'json',
 	    success: function(data, dataType) { success({data:data, dataType:dataType}); },
 	    error: function(XMLHttpRequest, textStatus, errorThrown) { error({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown} );
 	   },
 	};
 	$.ajax(options); // 送信
-	this.requested = url;
+	this.requested = options.url;
     },
 };
