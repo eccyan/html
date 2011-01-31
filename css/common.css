@@ -14,8 +14,10 @@ html>/**/body { font-size: 10px; /* Except IE */ }
 .wrapper{ margin: 0 auto; width: 400px; font-size: 140%; border-radius:1em; background-color: #0a0a0a; }
 .connect { margin:0em 1em 0em 1em; }
 .connect button { color:#FFF; background-color:#64AAEF; border-radius:0.5em; height:2.5em; }
+.timeline { float:left; color:#138; background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
+.timeline p { text-align:left; border-bottom-style:solid; border-width:1; border-color:#8a8a8a; }
 .follow { float:left; margin:1em 1em 1em 1em; }
-.like   { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
+.like { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
 
 footer						{ padding: 0 2em;  text-align: left; margin: 0 auto; width: 400px; font-size: 80%; }
 

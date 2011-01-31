@@ -4,9 +4,15 @@ require_once("controllers/controller.php");
 $con = new Controller();
 ?>
 <!DOCTYPE HTML>
-<html>
+<html lang=ja>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta charset="UTF-8" />
+	<meta property="og:title" content="えっちゃん.com/>
+	<meta property="og:type" content="website" />
+	<meta property="og:description" content="えっちゃんのサイト" />
+	<meta property="og:url" content="http://eccyan.com/" />
+	<meta property="og:image" content="http://graph.facebook.com/521665023/picture" />
+	<meta property="og:site_name" content="えっちゃん.com" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
@@ -16,7 +22,6 @@ $con = new Controller();
 	<script src="js/game.js" type="text/javascript"></script>
 
 	<link rel="stylesheet" href="css/common.css" type="text/css" / >
-	<title>えっちゃん.com</title>
 </head>
 <body>
 <div class="wrapper">
@@ -26,14 +31,10 @@ $con = new Controller();
 			<img src="http://graph.facebook.com/521665023/picture" alt="プロファイル画像" />
 		</a>
 	</p>
-	<p class="token">
-	    <span id="token-placeholder"></span>
-	</p>
 	<p class="timeline">
 	    <span id="timeline-placeholder"></span>
 	</p>
-	<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
-
+	<!-- <canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas> -->
 	<hr />
 	<p class="follow">
 	    <span id="follow-placeholder"></span>
@@ -47,37 +48,29 @@ $con = new Controller();
 		&copy; <a href="http://eccyan.com">eccyan.com</a> ( <a href="http://twitter.com/kotarochiba">@eccyan</a>) <a href="mailto:g00.eccyan@gmail.com">mail</a>
 	</footer>
 </div>
-<?php if ( empty($screenName) ) { ?>
-<?php } else {    ?>
-<?php }           ?>
-<script type="text/javascript">
-    twttr.anywhere(function (T) { T.hovercards();});
-</script>
 <script type="text/javascript">
     twttr.anywhere(function (T) { T("#follow-placeholder").followButton('eccyan'); });
 </script>
 <script type="text/javascript">
     game.api.accessParameters(function (data) {
-	$("#token-placeholder").text(data.oauth_token);
-    });
-</script>
-<script type="text/javascript">
-    game.api.accessParameters(function (data) {
 	twitter.accessParameters = data;
 	twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', { count:50 }, function(T) {
+	//twitter.send('GET', 'http://stream.twitter.com/1/statuses/filter.json', { count:50 }, function(T) {
 	    if (T.data.status.http_code != '200') {
 		$("#timeline-placeholder").append("<p>"+T.data.status.http_code+"</p>");
 		$("#timeline-placeholder").append("<p>"+T.data.contents.error+"</p>");
 	    }
 	    else {
 		for (i=0; i<T.data.contents.length; ++i) {
-		    content = T.data.contents;
-		    $("#timeline-placeholder").append("<p>"+content+"</p>");
+		    content = T.data.contents[i];
+		    $("#timeline-placeholder").append("<p>"+content.text+"</p>");
 		}
 	    }
-	    $("#timeline-placeholder").append("<a href='"+twitter.requested+"'>requested</a>");
 	});
     });
+</script>
+<script type="text/javascript">
+    twttr.anywhere(function (T) { T.hovercards();});
 </script>
 </body>
 </html>
