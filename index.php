@@ -8,10 +8,13 @@ $con = new Controller();
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
+	<script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js" type="text/javascript"></script>
+	<script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js" type="text/javascript"></script>
 	<script src="http://platform.twitter.com/anywhere.js?id=mGORvgD7zbKiXmysERthw&v=1" type="text/javascript"></script>
 	<script src="js/game.js" type="text/javascript"></script>
-	<!-- <script src="js/draw.js" type="text/javascript"></script> -->
+
 	<link rel="stylesheet" href="css/common.css" type="text/css" / >
 	<title>えっちゃん.com</title>
 </head>
@@ -26,7 +29,9 @@ $con = new Controller();
 	<p class="token">
 	    <span id="token-placeholder"></span>
 	</p>
-
+	<p class="timeline">
+	    <span id="timeline-placeholder"></span>
+	</p>
 	<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
 
 	<hr />
@@ -54,6 +59,24 @@ $con = new Controller();
 <script type="text/javascript">
     game.api.accessParameters(function (data) {
 	$("#token-placeholder").text(data.oauth_token);
+    });
+</script>
+<script type="text/javascript">
+    game.api.accessParameters(function (data) {
+	twitter.accessParameters = data;
+	twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', { count:50 }, function(T) {
+	    if (T.data.status.http_code != '200') {
+		$("#timeline-placeholder").append("<p>"+T.data.status.http_code+"</p>");
+		$("#timeline-placeholder").append("<p>"+T.data.contents.error+"</p>");
+	    }
+	    else {
+		for (i=0; i<T.data.contents.length; ++i) {
+		    content = T.data.contents;
+		    $("#timeline-placeholder").append("<p>"+content+"</p>");
+		}
+	    }
+	    $("#timeline-placeholder").append("<a href='"+twitter.requested+"'>requested</a>");
+	});
     });
 </script>
 </body>
