@@ -54,17 +54,15 @@ $con = new Controller();
 <script type="text/javascript">
     game.api.accessParameters(function (data) {
 	twitter.accessParameters = data;
-	twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', { count:50 }, function(T) {
-	//twitter.send('GET', 'http://stream.twitter.com/1/statuses/filter.json', { count:50 }, function(T) {
-	    if (T.data.status.http_code != '200') {
-		$("#timeline-placeholder").append("<p>"+T.data.status.http_code+"</p>");
-		$("#timeline-placeholder").append("<p>"+T.data.contents.error+"</p>");
+	var updated = false;
+	game.users.update(function () {
+	    var users = game.users.read(20); 
+	    if (users.length == 0) {
 	    }
-	    else {
-		for (i=0; i<T.data.contents.length; ++i) {
-		    content = T.data.contents[i];
-		    $("#timeline-placeholder").append("<p>"+content.text+"</p>");
-		}
+
+	    for (i=0; i<users.length; ++i) {
+		user = users[i];
+		$("#timeline-placeholder").append("<p><img src='"+user.image+"'width=40 height=40 />"+ user.text+"</p>");
 	    }
 	});
     });

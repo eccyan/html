@@ -1,11 +1,11 @@
 @charset 'UTF-8';
 
-html						{ font-family: sans-serif; background-color: #FFF; }
-body						{ color: #FFF; line-height: 1.63; }
-img							{ vertical-align: top; }
+html { font-family: sans-serif; background-color: #FFF; }
+body { color: #FFF; line-height: 1.63; }
+img { margin: 0.5em; vertical-align: top; }
 a { color: #3C3; }
 p { text-align: center; padding: 0; }
-hr {  }
+hr { }
 
 /** FONT SIZE */
 body { font-size: 62.5%; /* IE */}
@@ -14,13 +14,13 @@ html>/**/body { font-size: 10px; /* Except IE */ }
 .wrapper{ margin: 0 auto; width: 400px; font-size: 140%; border-radius:1em; background-color: #0a0a0a; }
 .connect { margin:0em 1em 0em 1em; }
 .connect button { color:#FFF; background-color:#64AAEF; border-radius:0.5em; height:2.5em; }
-.timeline { float:left; color:#138; background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
-.timeline p { text-align:left; border-bottom-style:solid; border-width:1; border-color:#8a8a8a; }
+.timeline { float:left; background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
+.timeline p { color:#138; text-align:left; border-bottom-style:solid; border-width:1; border-color:#8a8a8a; }
 .follow { float:left; margin:1em 1em 1em 1em; }
 .like { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
 
-footer						{ padding: 0 2em;  text-align: left; margin: 0 auto; width: 400px; font-size: 80%; }
+footer { padding: 0 2em;  text-align: left; margin: 0 auto; width: 400px; font-size: 80%; }
 
-.clearfix:after				{ content:"."; display: block; height:0px; clear:both; line-height:0; visibility:hidden; }
-.clearfix					{ zoom:1; }
+.clearfix:after	{ content:"."; display: block; height:0px; clear:both; line-height:0; visibility:hidden; }
+.clearfix{ zoom:1; }
 
