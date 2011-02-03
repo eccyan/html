@@ -31,10 +31,15 @@ $con = new Controller();
 			<img src="http://graph.facebook.com/521665023/picture" alt="プロファイル画像" />
 		</a>
 	</p>
+	<p class="consumer-key">
+	    <span id="consumer-key-palceholder"></span>
+	</p>
+	<!--
 	<p class="timeline">
 	    <span id="timeline-placeholder"></span>
 	</p>
-	<!-- <canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas> -->
+	<canvas id="twitter" width=400 height=400 >Unsupported browser.</canvas>
+	-->
 	<hr />
 	<p class="follow">
 	    <span id="follow-placeholder"></span>
@@ -52,20 +57,7 @@ $con = new Controller();
     twttr.anywhere(function (T) { T("#follow-placeholder").followButton('eccyan'); });
 </script>
 <script type="text/javascript">
-    game.api.accessParameters(function (data) {
-	twitter.accessParameters = data;
-	var updated = false;
-	game.users.update(function () {
-	    var users = game.users.read(20); 
-	    if (users.length == 0) {
-	    }
-
-	    for (i=0; i<users.length; ++i) {
-		user = users[i];
-		$("#timeline-placeholder").before("<p><img src='"+user.image+"'width=32 height=32 />"+ user.text+"</p>");
-	    }
-	});
-    });
+    game.execute(function(T) { T("#consumer-key-palceholder").consumerKey(); });
 </script>
 <script type="text/javascript">
     twttr.anywhere(function (T) { T.hovercards();});

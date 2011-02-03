@@ -1,73 +1,113 @@
 var game = {
-    users : {
-	buffer : [],
-	position : 0,
-	capacity : 100,
+    execute : function (action) {
+	// Twitter API 操作
+	var twitter = function() {
+	    return function() {
+		// 内部変数
+		var internal = {
+		    sinceId : null,
+		}
 
-	update : function (callback) {
-	    game.twitter.statuses(function (T) {
-		var contents = T.data.contents;
+		this.statuses = function (callback) {
+		    var parameters = {};
+		    if (internal.sinceId != null) { parameters.since_id = internal.sinceId; }
+		    parameters.count = 50;
 
-		var datas  = [];
-		for (i=0; i<contents.length; ++i) {
-		    var state = contents[i];
-		    datas.push({
-			text : state.text,
-			image : state.user.profile_image_url,
+		    var f = function (T) {
+			// since_id を更新する
+			internal.sinceId = T.data.contents[0].id;
+
+			callback(T);
+		    }
+
+		    twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
+		}
+	    }
+	}
+
+	// API 操作
+	var Api = (function () {
+	    return function () {
+		this.accessParameters = function (callback) {
+		    var url = 'http://eccyan.com/api/1/access_parameters';
+		    $.getJSON(url, callback);
+		}
+	    }
+	})();
+
+	// ユーザバッファ
+	var users = function (capacity) {
+	    return function () {
+		// 内部変数
+		var internal = {
+		    buffer   : [],
+		    position : 0,
+		    capacity : capacity,
+		};
+
+		// 更新
+		this.update = function (callback) {
+		    twitter.statuses(function (T) {
+			var contents = T.data.contents;
+			var datas  = [];
+			for (i=0; i<contents.length; ++i) {
+			    var state = contents[i];
+			    datas.push({
+				text  : state.text,
+				image : state.user.profile_image_url,
+			    });
+			}
+
+			// バッファリング
+			var sliced = internal.buffer.slice(internal.position, internal.capacity-internal.position-1);
+			internal.buffer = sliced.concat( datas.slice(0, internal.position-1) );
+
+			callback();
 		    });
 		}
-		// バッファリング
-		var sliced = game.users.buffer.slice(game.users.position, game.users.capacity-game.users.position-1);
-		game.users.buffer = sliced.concat( datas.slice(0, game.users.position-1) );
 
-		callback();
-	    });
-	},
-	read: function(count) {
-	    if (this.position >= this.capacity-1) {
-	    	return [];
+		// 読み込み
+		this,read = function(count) {
+		    // バッファ容量を超える場合
+		    if (this.position >= this.capacity-1) {
+			throw new RangeError("read position is out of capacity.");
+		    }
+
+		    var readed = internal.slice(internal.position, Math.min(count, internal.capacity-internal.position-1));
+		    internal.position = Math.min(internal.position+count, internal.capacity-1);
+
+		    return readed;
+		}
 	    }
-
-	    var readed = this.buffer.slice(this.position, Math.min(count, this.capacity-this.position-1));
-	    position = Math.min(this.position+count, this.capacity-1);
-
-	    return readed;
 	}
-    },
 
-    api : {
-	accessParameters : function (callback) {
-	    var url = 'http://eccyan.com/api/1/access_parameters';
-	    $.getJSON(url, callback);
-	},
-    },
+	// バインドオブジェクト
+    	var Binder = (function () {
+	    return function (selector) {
+	    	this.consumerKey = function() {
+		    var api = new Api();
+		    api.accessParameters(function (data) {
+		    	oauth.accessParameters = data;
+			$(selector).append('<p>'+oauth.accessParameters.oauth_consumer_key+'<p>');
+		    });
 
-    twitter : {
-    	sinceId : null,
-	statuses : function (success, error) {
-	    var parameters = {};
-	    if (this.sinceId != null) { parameters.since_id = this.sinceId; }
-	    parameters.count = 50;
-
-	    var success_ = function (T) {
-	    	// since_id を更新する
-	    	game.twitter.sinceId = T.data.contents[0].id;
-		success(T);
+		}
 	    }
+	})();
 
-	    twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', parameters, success_, error); 
-	},
-    },
+    	action(function (selector) { return new Binder(selector); });
+    }, 
+
+
 };
 
-var twitter = {
+var oauth = {
     accessParameters : null,
     proxy : function (url) { return "http://eccyan.com/p.php?url=" + url },
-    send : function (method, api, parameters, success, error) {
+    send : function (method, api, parameters, callback) {
 	// デフォルト値
     	parameters  = parameters ? parameters : [];
-	success     = success ? success : function (T) {};
-    	error       = error ? error : function (T) { alert(T.textStatus); };
+	callback    = callback ? callback : function (T) {};
 
 	if (!this.accessParameters) {
 	    return;
@@ -100,12 +140,15 @@ var twitter = {
 	OAuth.SignatureMethod.sign(message, accessor);
 	var url = OAuth.addToURL(message.action, message.parameters);
 	var options = {
-	    type: message.method,
-	    url: this.proxy(encodeURIComponent(url)),
-	    dataType: 'json',
-	    success: function(data, dataType) { success({data:data, dataType:dataType}); },
-	    error: function(XMLHttpRequest, textStatus, errorThrown) { error({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown} );
-	   },
+	    type     : message.method,
+	    url      : this.proxy(encodeURIComponent(url)),
+	    dataType : 'json',
+	    success  : function(data, dataType) {
+		callback({data:data, dataType:dataTypa, succeeded:true});
+	    },
+	    error    : function(XMLHttpRequest, textStatus, errorThrown) {
+		callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
+	    },
 	};
 	$.ajax(options); // 送信
 	this.requested = options.url;
