@@ -37,7 +37,7 @@ var game = {
 
     api : {
 	accessParameters : function (callback) {
-	    var url = 'http://eccyan.com/api/1/access_parameters.php';
+	    var url = 'http://eccyan.com/api/1/access_parameters';
 	    $.getJSON(url, callback);
 	},
     },
