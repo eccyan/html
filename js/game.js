@@ -113,10 +113,10 @@ var oauth = {
 	    return;
 	}
 
-	var accessor = {
-	    consumerSecret: this.accessParameters.oauth_consumer_secret,
-	    tokenSecret: this.accessParameters.oauth_token_secret, 
-	};
+//	var accessor = {
+//	    consumerSecret: this.accessParameters.oauth_consumer_secret,
+//	    tokenSecret: this.accessParameters.oauth_token_secret, 
+//	};
 
 	// リクエスト用のパラメータ作成
 	var requestParameters = [];
@@ -136,8 +136,10 @@ var oauth = {
 	    parameters: requestParameters, 
 	};
 
+	// URL作成までをAPIにしてサーバーサイドで
 	OAuth.setTimestampAndNonce(message);
-	OAuth.SignatureMethod.sign(message, accessor);
+	//OAuth.SignatureMethod.sign(message, accessor);
+	OAuth.SignatureMethod.sign(message, null);
 	var url = OAuth.addToURL(message.action, message.parameters);
 	var options = {
 	    type     : message.method,

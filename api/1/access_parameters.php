@@ -26,9 +26,9 @@ if ( !empty($cache) ) {
 
     $params['oauth_signature_method'] = 'HMAC-SHA1';
     $params['oauth_consumer_key']     = $config->key;
-    $params['oauth_consumer_secret']  = $config->secret;
+    //$params['oauth_consumer_secret']  = $config->secret;
     $params['oauth_token']            = $token->key;
-    $params['oauth_token_secret']     = $token->secret;
+    //$params['oauth_token_secret']     = $token->secret;
 }
 
 $responce = json_encode($params);
