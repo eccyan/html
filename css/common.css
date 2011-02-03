@@ -2,7 +2,7 @@
 
 html { font-family: sans-serif; background-color: #FFF; }
 body { color: #FFF; line-height: 1.63; }
-img { margin: 0.5em; vertical-align: top; }
+img { margin: 0; vertical-align: bottom; }
 a { color: #3C3; }
 p { text-align: center; padding: 0; }
 hr { }
@@ -15,7 +15,7 @@ html>/**/body { font-size: 10px; /* Except IE */ }
 .connect { margin:0em 1em 0em 1em; }
 .connect button { color:#FFF; background-color:#64AAEF; border-radius:0.5em; height:2.5em; }
 .timeline { float:left; background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
-.timeline p { color:#138; text-align:left; border-bottom-style:solid; border-width:1; border-color:#8a8a8a; }
+.timeline p { color:#138; text-align:left; border-bottom-style:solid; border-width:0.5em; border-color:#0a0a0a; }
 .follow { float:left; margin:1em 1em 1em 1em; }
 .like { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
 

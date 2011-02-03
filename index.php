@@ -62,7 +62,7 @@ $con = new Controller();
 
 	    for (i=0; i<users.length; ++i) {
 		user = users[i];
-		$("#timeline-placeholder").append("<p><img src='"+user.image+"'width=40 height=40 />"+ user.text+"</p>");
+		$("#timeline-placeholder").before("<p><img src='"+user.image+"'width=32 height=32 />"+ user.text+"</p>");
 	    }
 	});
     });
