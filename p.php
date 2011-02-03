@@ -139,8 +139,16 @@
 $enable_jsonp    = false;
 $enable_native   = false;
 $valid_url_regex = '/.*/';
+$valid_referer_regex = '/https?\://.*.?(eccyan\.com[/?].*|eccyan.com$)/';
 
 // ############################################################################
+
+// リファラを制限する
+$referer = $_SERVER['HTTP_REFERER'];
+if ( !preg_match($valud_referer_tregex, $referer) ) {
+  $contents = 'ERROR: invalid referer';
+  $status = array( 'http_code' => 'ERROR' );
+}
 
 $url = $_GET['url'];
 
