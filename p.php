@@ -143,7 +143,7 @@ $valid_referer_regex = '/https?\://.*.?(eccyan\.com[/?].*|eccyan.com$)/';
 
 // ############################################################################
 
-// $B%j%U%!%i$r@)8B$9$k(B
+// リファラを制限する
 $referer = $_SERVER['HTTP_REFERER'];
 if ( !preg_match($valud_referer_tregex, $referer) ) {
   $contents = 'ERROR: invalid referer';

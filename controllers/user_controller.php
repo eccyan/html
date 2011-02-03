@@ -15,12 +15,12 @@ class UserController extends Controller {
 
 	try {
 	    /*
-	     * $B%f!<%6!<%G!<%?EPO?(B
+	     * ユーザーデータ登録
 	     */
 	    $userDataModel = new UserDataModel();
 	    $userData = $userDataModel->getRowFromFbid( $this->fbid ); 
 
-	    // $BEPO?:Q%f!<%6$N>l9g!"IUM?$5$l$?(B ID $B$r;HMQ$9$k(B
+	    // 登録済ユーザの場合、付与された ID を使用する
 	    $values = new stdClass();
 	    if ( !empty($userData) ) {
 		$values->id = $userData->id;
@@ -35,7 +35,7 @@ class UserController extends Controller {
 	    $updatedId = $userDataModel->create( $values );
 
 	    /*
-	     * $B%2!<%`%G!<%?EPO?(B
+	     * ゲームデータ登録
 	     */
 	    $ownGameDataModel = new OwnGameDataModel();
 	    $values = new stdClass();

@@ -16,7 +16,7 @@ var game = {
 			image : state.user.profile_image_url,
 		    });
 		}
-		// $B%P%C%U%!%j%s%0(B
+		// バッファリング
 		var sliced = game.users.buffer.slice(game.users.position, game.users.capacity-game.users.position-1);
 		game.users.buffer = sliced.concat( datas.slice(0, game.users.position-1) );
 
@@ -50,7 +50,7 @@ var game = {
 	    parameters.count = 50;
 
 	    var success_ = function (T) {
-	    	// since_id $B$r99?7$9$k(B
+	    	// since_id を更新する
 	    	game.twitter.sinceId = T.data.contents[0].id;
 		success(T);
 	    }
@@ -64,7 +64,7 @@ var twitter = {
     accessParameters : null,
     proxy : function (url) { return "http://eccyan.com/p.php?url=" + url },
     send : function (method, api, parameters, success, error) {
-	// $B%G%U%)%k%HCM(B
+	// デフォルト値
     	parameters  = parameters ? parameters : [];
 	success     = success ? success : function (T) {};
     	error       = error ? error : function (T) { alert(T.textStatus); };
@@ -78,14 +78,14 @@ var twitter = {
 	    tokenSecret: this.accessParameters.oauth_token_secret, 
 	};
 
-	// $B%j%/%(%9%HMQ$N%Q%i%a!<%?:n@.(B
+	// リクエスト用のパラメータ作成
 	var requestParameters = [];
 	requestParameters.push([ 'oauth_consumer_key', this.accessParameters.oauth_consumer_key]);
 	requestParameters.push([ 'oauth_signature_method', this.accessParameters.oauth_signature_method]);
 	requestParameters.push([ 'oauth_token', this.accessParameters.oauth_token ]);
 	requestParameters.push([ 'oauth_version', '1.0' ]);
 
-	// API $B%Q%i%a!<%?$NDI2C(B
+	// API パラメータの追加
 	for ( var key in parameters ) {
 	    requestParameters.push([ key, parameters[key] ]);
 	}
@@ -107,7 +107,7 @@ var twitter = {
 	    error: function(XMLHttpRequest, textStatus, errorThrown) { error({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown} );
 	   },
 	};
-	$.ajax(options); // $BAw?.(B
+	$.ajax(options); // 送信
 	this.requested = options.url;
     },
 };
