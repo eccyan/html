@@ -1,7 +1,7 @@
 var game = {
     execute : function (action) {
 	// Twitter API 操作
-	var Twitter = function() {
+	var Twitter = (function() {
 	    return function() {
 		// 内部変数
 		var internal = {
@@ -20,10 +20,10 @@ var game = {
 			callback(T);
 		    }
 
-		    twitter.send('GET', 'http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
+		    oauth.send('http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
 		}
 	    }
-	}
+	})();
 
 	// API 操作
 	var Api = (function () {
@@ -116,11 +116,30 @@ var game = {
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
-	    	this.consumerKey = function() {
-		    var api = new Api();
-		    api.oauthUrl(
-		        'http://api.twitter.com/1/statuses/home_timeline.json',
-			function (data) { $(selector).append('<p>'+data+'<p>'); }
+	    	this.timeline = function() {
+		    var twitter = new Twitter();
+		    twitter.statuses(
+			function (T) {
+			    $(selector).append("<p>つぶやき</p>");
+
+			    contents = T.data.contents;
+			    for (i=0; i<contents.length; ++i) {
+				content = contents[i];
+				$(selector).append(
+				    "<p>"+
+				    	"<ul>"+
+					    "<li>"+
+						"<img src='"+content.user.profile_image_url+"' width=24px height=24px alt='"+content.user.profile_image_url+"'/>"+
+						"<span>"+content.user.name+"</span>"+
+					    "</li>"+
+					    "<li>"+
+						"<span>"+content.text+"</span>"+
+					    "</li>"+
+				    	"</ul>"+
+				    "</p>"
+				);
+			    }
+			}
 		    );
 		}
 	    }
@@ -133,35 +152,82 @@ var game = {
 };
 
 var oauth = {
-    accessParameters : null,
-    proxy : function (url) { return "http://eccyan.com/p.php?url=" + url },
-    send : function (method, endpoint, parameters, callback) {
-	// デフォルト値
-    	parameters  = parameters || [];
-	callback    = callback   || function (T) {};
-
-	if (!this.accessParameters) {
-	    return;
+    proxy : function (url) {
+	return "http://eccyan.com/p.php?url=" + encodeURIComponent(url);
+    },
+    send : function () {
+	var method     = 'GET';
+	var endpoint   = null;
+	var parameters = [];
+	var callback   = function (T) { };
+	switch (arguments.length) {
+	    case 2: 
+		endpoint = arguments[0];
+		callback = arguments[1];
+		break;
+	    case 3: 
+		endpoint   = arguments[0];
+		parameters = arguments[1];
+		callback   = arguments[2];
+		break;
 	}
 
-
 	// API からURL を取得する
-	var api = new Api();
-	api.oauthUrl(endpoint, function (url) {
-
-	    // 送信
-	    var options = {
-		type     : method,
-		url      : this.proxy(encodeURIComponent(url+query)),
-		dataType : 'json',
-		success  : function(data, dataType) {
-		    callback({data:data, dataType:dataTypa, succeeded:true});
-		},
-		error    : function(XMLHttpRequest, textStatus, errorThrown) {
-		    callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
-		},
-	    };
-	    $.ajax(options); 
-	});
+	this.url(
+	    endpoint,
+	    function (url) {
+		// 送信
+		var options = {
+		    type     : method,
+		    url      : oauth.proxy(url),
+		    dataType : 'json',
+		    success  : function(data, dataType) {
+			callback({data:data, dataType:dataType, succeeded:true});
+		    },
+		    error    : function(XMLHttpRequest, textStatus, errorThrown) {
+			callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
+		    },
+		}
+		$.ajax(options); 
+	    }
+	);
     },
+
+    // API アクセス URL を取得
+    url : function () {
+	var method     = 'GET';
+	var endpoint   = null;
+	var parameters = [];
+	var callback   = function (T) { };
+	switch (arguments.length) {
+	    case 2: 
+		endpoint = arguments[0];
+		callback = arguments[1];
+		break;
+	    case 3: 
+		endpoint   = arguments[0];
+		parameters = arguments[1];
+		callback   = arguments[2];
+		break;
+	}
+
+	// Query String の作成
+	var p = parameters;
+	p.m  = method;
+	p.ep = endpoint;
+
+	var query = '';
+	for ( var key in p ) {
+	    var value = parameters[key];
+	    if (value.length > 0) {
+		var q = query.indexOf('?');
+		if (q < 0) query += '?';
+		else       query += '&';
+		query += key+'='+value;
+	    }
+	}
+
+	var url = 'http://eccyan.com/api/1/oauth_url'+query;
+	$.getJSON(url, callback);
+    }
 };
