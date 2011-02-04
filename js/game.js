@@ -1,13 +1,14 @@
 var game = {
     execute : function (action) {
 	// Twitter API 操作
-	var twitter = function() {
+	var Twitter = function() {
 	    return function() {
 		// 内部変数
 		var internal = {
 		    sinceId : null,
 		}
 
+		// ホームタイムライン取得
 		this.statuses = function (callback) {
 		    var parameters = {};
 		    if (internal.sinceId != null) { parameters.since_id = internal.sinceId; }
@@ -16,7 +17,6 @@ var game = {
 		    var f = function (T) {
 			// since_id を更新する
 			internal.sinceId = T.data.contents[0].id;
-
 			callback(T);
 		    }
 
@@ -28,15 +28,47 @@ var game = {
 	// API 操作
 	var Api = (function () {
 	    return function () {
-		this.accessParameters = function (callback) {
-		    var url = 'http://eccyan.com/api/1/access_parameters';
+		this.oauthUrl = function () {
+		    var method     = 'GET';
+		    var endpoint   = null;
+		    var parameters = [];
+		    var callback   = function (T) { };
+		    switch (arguments.length) {
+		    	case 2: 
+			    endpoint = arguments[0];
+			    callback = arguments[1];
+			    break;
+		    	case 3: 
+			    endpoint   = arguments[0];
+			    parameters = arguments[1];
+			    callback   = arguments[2];
+			    break;
+		    }
+
+		    // Query String の作成
+		    var p = parameters;
+		    p.m  = method;
+		    p.ep = endpoint;
+
+		    var query = '';
+		    for ( var key in p ) {
+			var value = parameters[key];
+			if (value.length > 0) {
+			    var q = query.indexOf('?');
+			    if (q < 0) query += '?';
+			    else       query += '&';
+			    query += key+'='+value;
+			}
+		    }
+
+		    var url = 'http://eccyan.com/api/1/oauth_url'+query;
 		    $.getJSON(url, callback);
 		}
 	    }
 	})();
 
-	// ユーザバッファ
-	var users = function (capacity) {
+	// ユーザバッファオブジェクト
+	var Users = function (capacity) {
 	    return function () {
 		// 内部変数
 		var internal = {
@@ -86,11 +118,10 @@ var game = {
 	    return function (selector) {
 	    	this.consumerKey = function() {
 		    var api = new Api();
-		    api.accessParameters(function (data) {
-		    	oauth.accessParameters = data;
-			$(selector).append('<p>'+oauth.accessParameters.oauth_consumer_key+'<p>');
-		    });
-
+		    api.oauthUrl(
+		        'http://api.twitter.com/1/statuses/home_timeline.json',
+			function (data) { $(selector).append('<p>'+data+'<p>'); }
+		    );
 		}
 	    }
 	})();
@@ -104,55 +135,33 @@ var game = {
 var oauth = {
     accessParameters : null,
     proxy : function (url) { return "http://eccyan.com/p.php?url=" + url },
-    send : function (method, api, parameters, callback) {
+    send : function (method, endpoint, parameters, callback) {
 	// デフォルト値
-    	parameters  = parameters ? parameters : [];
-	callback    = callback ? callback : function (T) {};
+    	parameters  = parameters || [];
+	callback    = callback   || function (T) {};
 
 	if (!this.accessParameters) {
 	    return;
 	}
 
-//	var accessor = {
-//	    consumerSecret: this.accessParameters.oauth_consumer_secret,
-//	    tokenSecret: this.accessParameters.oauth_token_secret, 
-//	};
 
-	// リクエスト用のパラメータ作成
-	var requestParameters = [];
-	requestParameters.push([ 'oauth_consumer_key', this.accessParameters.oauth_consumer_key]);
-	requestParameters.push([ 'oauth_signature_method', this.accessParameters.oauth_signature_method]);
-	requestParameters.push([ 'oauth_token', this.accessParameters.oauth_token ]);
-	requestParameters.push([ 'oauth_version', '1.0' ]);
+	// API からURL を取得する
+	var api = new Api();
+	api.oauthUrl(endpoint, function (url) {
 
-	// API パラメータの追加
-	for ( var key in parameters ) {
-	    requestParameters.push([ key, parameters[key] ]);
-	}
-
-	var message = {
-	    method:     method, 
-	    action:     api, 
-	    parameters: requestParameters, 
-	};
-
-	// URL作成までをAPIにしてサーバーサイドで
-	OAuth.setTimestampAndNonce(message);
-	//OAuth.SignatureMethod.sign(message, accessor);
-	OAuth.SignatureMethod.sign(message, null);
-	var url = OAuth.addToURL(message.action, message.parameters);
-	var options = {
-	    type     : message.method,
-	    url      : this.proxy(encodeURIComponent(url)),
-	    dataType : 'json',
-	    success  : function(data, dataType) {
-		callback({data:data, dataType:dataTypa, succeeded:true});
-	    },
-	    error    : function(XMLHttpRequest, textStatus, errorThrown) {
-		callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
-	    },
-	};
-	$.ajax(options); // 送信
-	this.requested = options.url;
+	    // 送信
+	    var options = {
+		type     : method,
+		url      : this.proxy(encodeURIComponent(url+query)),
+		dataType : 'json',
+		success  : function(data, dataType) {
+		    callback({data:data, dataType:dataTypa, succeeded:true});
+		},
+		error    : function(XMLHttpRequest, textStatus, errorThrown) {
+		    callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
+		},
+	    };
+	    $.ajax(options); 
+	});
     },
 };

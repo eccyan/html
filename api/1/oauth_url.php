@@ -26,19 +26,27 @@ $url = null;
 if ( !empty($cache) ) {
     $decoded = json_decode($cache);
 
+    $method   = null;
     $endpoint = null;
+    $p        = null;
     $parameters = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
     foreach ($parameters as $key => $parameter) {
-	if ( strcmp($key, 'ep') == 0 ) {
-	    $endpoint = $parameter;
+	if ( strcmp($key, 'm') == 0 ) {
+	    $method = $parameter;
+	}
+	elseif ( strcmp($key, 'ep') == 0 ) {
+	    $endpoint = rawurldecode($parameter);
+	}
+	else {
+	    $p[$key] = $parameter;
 	}
     }
-	    
+
     $consumer        = new OAuthConsumer($config->key, $config->secret);
     $signatureMethod = new OAuthSignatureMethod_HMAC_SHA1();
     $token           = new OAuthToken($decoded->key, $decoded->secret);
 
-    $req = OAuthRequest::from_consumer_and_token($consumer, $token, NULL, $endpoint, $params);
+    $req = OAuthRequest::from_consumer_and_token($consumer, $token, $method, $endpoint, $p);
     $req->sign_request($signatureMethod, $consumer, $token);
     $url = $req->to_url();
 }
