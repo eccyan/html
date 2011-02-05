@@ -52,7 +52,7 @@ $con = new Controller();
     twttr.anywhere(function (T) { T("#follow-placeholder").followButton('eccyan'); });
 </script>
 <script type="text/javascript">
-    game.execute(function(T) { T("#timeline-placeholder").timeline(); });
+    game.execute(function(T) { T("#timeline-placeholder").timeline(5000); });
 </script>
 <script type="text/javascript">
     twttr.anywhere(function (T) { T.hovercards();});

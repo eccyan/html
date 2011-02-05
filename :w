@@ -11,12 +11,12 @@ var game = {
 		// ホームタイムライン取得
 		this.statuses = function (callback) {
 		    var parameters = {};
-		    if (internal.sinceId) { parameters.since_id = internal.sinceId; }
+		    if (internal.sinceId != null) { parameters.since_id = internal.sinceId; }
 		    parameters.count = 50;
 
 		    var f = function (T) {
 			// since_id を更新する
-			internal.sinceId = T.data.contents[T.data.contents.length-1].id;
+			internal.sinceId = T.data.contents[0].id;
 			callback(T);
 		    }
 
@@ -25,48 +25,87 @@ var game = {
 	    }
 	})();
 
+	// API 操作
+	var Api = (function () {
+	    return function () {
+		this.oauthUrl = function () {
+		    var method     = 'GET';
+		    var endpoint   = null;
+		    var parameters = [];
+		    var callback   = function (T) { };
+		    switch (arguments.length) {
+		    	case 2: 
+			    endpoint = arguments[0];
+			    callback = arguments[1];
+			    break;
+		    	case 3: 
+			    endpoint   = arguments[0];
+			    parameters = arguments[1];
+			    callback   = arguments[2];
+			    break;
+		    }
+
+		    // Query String の作成
+		    var p = parameters;
+		    p.m  = method;
+		    p.ep = endpoint;
+
+		    var query = '';
+		    for ( var key in p ) {
+			var value = parameters[key];
+			if (value.length > 0) {
+			    var q = query.indexOf('?');
+			    if (q < 0) query += '?';
+			    else       query += '&';
+			    query += key+'='+value;
+			}
+		    }
+
+		    var url = 'http://eccyan.com/api/1/oauth_url'+query;
+		    $.getJSON(url, callback);
+		}
+	    }
+	})();
+
 	// ユーザバッファオブジェクト
-	var Users = (function () {
-	    return function (capacity) {
+	var Users = (function (capacity) {
+	    return function () {
 		// 内部変数
 		var internal = {
 		    buffer   : [],
 		    position : 0,
 		    capacity : capacity,
-		    twitter  : new Twitter,
 		};
 
 		// 更新
 		this.update = function (callback) {
-		    internal.twitter.statuses(function (T) {
-		    	callback = callback || function () { };
-
+		    twitter.statuses(function (T) {
 			var contents = T.data.contents;
-			var statuses = [];
+			var datas  = [];
 			for (i=0; i<contents.length; ++i) {
 			    var state = contents[i];
-			    statuses.push(state);
+			    datas.push({
+				text  : state.text,
+				image : state.user.profile_image_url,
+			    });
 			}
 
 			// バッファリング
-			var sliced = statuses.slice(internal.position, internal.capacity-internal.position-1);
-			internal.buffer = sliced.concat( internal.buffer.slice(0, internal.position-1) );
-			internal.position = 0;
+			var sliced = internal.buffer.slice(internal.position, internal.capacity-internal.position-1);
+			internal.buffer = sliced.concat( datas.slice(0, internal.position-1) );
 
 			callback();
 		    });
 		}
 
 		// 読み込み
-		this.read = function(count) {
-		    count = count || 20;
-
+		this,read = function(count) {
 		    // バッファ容量を超える場合
-		    if (internal.position >= internal.capacity-1) {
+		    if (this.position >= this.capacity-1) {
 			throw new RangeError("read position is out of capacity.");
 		    }
 
-		    var readed = internal.buffer.slice(internal.position, Math.min(count, internal.capacity-internal.position-1));
+		    var readed = internal.slice(internal.position, Math.min(count, internal.capacity-internal.position-1));
 		    internal.position = Math.min(internal.position+count, internal.capacity-1);
 
 		    return readed;
@@ -77,38 +116,30 @@ var game = {
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
-	    	this.timeline = function(interval) {
-		    var users = new Users(500);
-		    setInterval( function () {
-			    users.update(function () {
-				statuses = null;
-			    	try {
-				    statuses = users.read();
-				}
-				catch (e) {
-				    statuses = [];
-				}
+	    	this.timeline = function() {
+		    var twitter = new Twitter();
+		    twitter.statuses(
+			function (T) {
+			    $(selector).append("<h1>つぶやき</h1>");
 
-				$(selector+"~ ul").remove();
-
-				statuses.reverse();
-				for (i=0; i<statuses.length; ++i) {
-				    state = statuses[i];
-				    $(selector).after(
-					    "<ul>"+
-						"<li>"+
-						    "<img src='"+state.user.profile_image_url+"' width=24px height=24px alt='"+state.user.profile_image_url+"'/>"+
-						    "<span>"+state.user.name+"</span>"+
-						"</li>"+
-						"<li>"+
-						    "<span>"+state.text+"</span>"+
-						"</li>"+
-					    "</ul>"
-				    );
-				}
-			    });
-			},
-			interval
+			    contents = T.data.contents;
+			    for (i=0; i<contents.length; ++i) {
+				content = contents[i];
+				$(selector).append(
+				    "<p>"+
+				    	"<ul>"+
+					    "<li>"+
+						"<img src='"+content.user.profile_image_url+"' width=24px height=24px alt='"+content.user.profile_image_url+"'/>"+
+						"<span>"+content.user.name+"</span>"+
+					    "</li>"+
+					    "<li>"+
+						"<span>"+content.text+"</span>"+
+					    "</li>"+
+				    	"</ul>"+
+				    "</p>"
+				);
+			    }
+			}
 		    );
 		}
 	    }
@@ -144,7 +175,6 @@ var oauth = {
 	// API からURL を取得する
 	this.url(
 	    endpoint,
-	    parameters,
 	    function (url) {
 		// 送信
 		var options = {
@@ -172,12 +202,12 @@ var oauth = {
 	switch (arguments.length) {
 	    case 2: 
 		endpoint = arguments[0];
-		callback = arguments[1] || function (T) { };
+		callback = arguments[1];
 		break;
 	    case 3: 
 		endpoint   = arguments[0];
-		parameters = arguments[1] || [];
-		callback   = arguments[2] || function (T) { };
+		parameters = arguments[1];
+		callback   = arguments[2];
 		break;
 	}
 
@@ -188,8 +218,8 @@ var oauth = {
 
 	var query = '';
 	for ( var key in p ) {
-	    var value = p[key];
-	    if (value) {
+	    var value = parameters[key];
+	    if (value.length > 0) {
 		var q = query.indexOf('?');
 		if (q < 0) query += '?';
 		else       query += '&';
