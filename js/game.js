@@ -106,6 +106,8 @@ var game = {
 					    "</ul>"
 				    );
 				}
+				$(selector+"~ ul").animate({ opacity: "0" }, 0);
+				$(selector+"~ ul").animate({ opacity: "1" }, 1500);
 			    });
 			},
 			interval
