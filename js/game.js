@@ -5,6 +5,7 @@ var game = {
 	    return function() {
 		// 内部変数
 		var internal = {
+		    oldSinceId: null,
 		    sinceId : null,
 		}
 
@@ -16,11 +17,17 @@ var game = {
 
 		    var f = function (T) {
 			// since_id を更新する
+			internal.oldSinceId = internal.sinceId;
 			internal.sinceId = T.data.contents[T.data.contents.length-1].id;
 			callback(T);
 		    }
 
 		    oauth.send('http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
+		}
+
+		// 更新された
+		this.updated = function () {
+		    return internal.oldSinceId != internal.sinceId;
 		}
 	    }
 	})();
@@ -30,16 +37,19 @@ var game = {
 	    return function (capacity) {
 		// 内部変数
 		var internal = {
-		    buffer   : [],
-		    position : 0,
-		    capacity : capacity,
-		    twitter  : new Twitter,
+		    buffer      : [],
+		    position    : 0,
+		    updateCount : 0,
+		    capacity    : capacity,
+		    twitter     : new Twitter,
 		};
 
 		// 更新
-		this.update = function (callback) {
+		this.update = function () {
 		    internal.twitter.statuses(function (T) {
-		    	callback = callback || function () { };
+		    	var callback = callback || function () { };
+
+			if (!internal.twitter.updated()) { return; }
 
 			var contents = T.data.contents;
 			var statuses = [];
@@ -49,17 +59,16 @@ var game = {
 			}
 
 			// バッファリング
-			var sliced = statuses.slice(internal.position, internal.capacity-internal.position-1);
-			internal.buffer = sliced.concat( internal.buffer.slice(0, internal.position-1) );
+			var sliced = statuses.slice( internal.position, internal.capacity-internal.position-1 );
+			internal.buffer = sliced.concat( internal.buffer.slice(0, Math.max(internal.position-1, 0)) );
 			internal.position = 0;
-
-			callback();
+			internal.updateCount = sliced.length;
 		    });
 		}
 
 		// 読み込み
 		this.read = function(count) {
-		    count = count || 20;
+		    var count = count || 20;
 
 		    // バッファ容量を超える場合
 		    if (internal.position >= internal.capacity-1) {
@@ -67,9 +76,17 @@ var game = {
 		    }
 
 		    var readed = internal.buffer.slice(internal.position, Math.min(count, internal.capacity-internal.position-1));
-		    internal.position = Math.min(internal.position+count, internal.capacity-1);
+		    internal.position = Math.min(internal.position+readed, internal.capacity-1);
 
 		    return readed;
+		}
+
+		this.count = function() {
+		    return Math.max(internal.buffer.length-internal.position, 0);
+		}
+
+		this.updateCount = function() {
+		    return internal.updateCount;
 		}
 	    }
 	})();
@@ -77,40 +94,47 @@ var game = {
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
-	    	this.timeline = function(interval) {
+	    	this.timeline = function(interval, count) {
 		    var users = new Users(500);
+		    var count = count || 10;
 		    setInterval( function () {
-			    users.update(function () {
-				statuses = null;
-			    	try {
-				    statuses = users.read();
-				}
-				catch (e) {
-				    statuses = [];
-				}
-
-				$(selector+"~ ul").remove();
-
-				statuses.reverse();
-				for (i=0; i<statuses.length; ++i) {
-				    state = statuses[i];
-				    $(selector).after(
-					    "<ul>"+
-						"<li>"+
-						    "<img src='"+state.user.profile_image_url+"' width=24px height=24px alt='"+state.user.profile_image_url+"'/>"+
-						    "<span>"+state.user.name+"</span>"+
-						"</li>"+
-						"<li>"+
-						    "<span>"+state.text+"</span>"+
-						"</li>"+
-					    "</ul>"
-				    );
-				}
-				$(selector+"~ ul").animate({ opacity: "0" }, 0);
-				$(selector+"~ ul").animate({ opacity: "1" }, 1500);
-			    });
+			    users.update();
 			},
 			interval
+		    );
+		    setInterval( function () {
+			    var statuses = null;
+			    try {
+				statuses = users.read(count);
+			    }
+			    catch (e) {
+				statuses = users.read(users.count());
+			    }
+
+			    if ( statuses.length == 0 ) { return; }
+			    if ( users.updateCount < count ) { $(selector+"~ ul").remove(); }
+
+			    var now = new Date; 
+			    var sliceId = "sliced-"+parseInt(now/1000);
+			    statuses.reverse();
+			    for (i=0; i<statuses.length; ++i) {
+				state = statuses[i];
+				$(selector).after(
+					"<ul class="+sliceId+">"+
+					    "<li>"+
+						"<img src='"+state.user.profile_image_url+"' width=24px height=24px alt='"+state.user.profile_image_url+"'/>"+
+						"<span>"+state.user.name+"</span>"+
+					    "</li>"+
+					    "<li>"+
+						"<span>"+state.text+"</span>"+
+					    "</li>"+
+					"</ul>"
+				);
+			    }
+			    $("."+sliceId).css({ opacity: "0" });
+			    $("."+sliceId).animate({ opacity: "1" }, 2000);
+			},
+			60
 		    );
 		}
 	    }
