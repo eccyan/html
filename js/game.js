@@ -16,9 +16,12 @@ var game = {
 		    parameters.count = 50;
 
 		    var f = function (T) {
+			if (T.data.status.http_code == "400") {
+			    throw new Error(T.data.contents.error);
+			}
 			// since_id を更新する
 			internal.oldSinceId = internal.sinceId;
-			internal.sinceId = T.data.contents[T.data.contents.length-1].id;
+			internal.sinceId = T.data.contents[0].id;
 			callback(T);
 		    }
 
@@ -39,7 +42,6 @@ var game = {
 		var internal = {
 		    buffer      : [],
 		    position    : 0,
-		    updateCount : 0,
 		    capacity    : capacity,
 		    twitter     : new Twitter,
 		};
@@ -59,34 +61,31 @@ var game = {
 			}
 
 			// バッファリング
-			var sliced = statuses.slice( internal.position, internal.capacity-internal.position-1 );
-			internal.buffer = sliced.concat( internal.buffer.slice(0, Math.max(internal.position-1, 0)) );
+			statuses.reverse();
+			var sliced = statuses.slice( 0, internal.capacity-internal.position-1 );
+			internal.buffer = internal.buffer.slice( Math.min(internal.position+1, internal.capacity-1), Math.min(internal.buffer.length, internal.capacity-1) );
+			internal.buffer = internal.buffer.concat( sliced );
 			internal.position = 0;
-			internal.updateCount = sliced.length;
 		    });
 		}
 
 		// 読み込み
 		this.read = function(count) {
-		    var count = count || 20;
+		    var count = count || 1;
 
 		    // バッファ容量を超える場合
 		    if (internal.position >= internal.capacity-1) {
 			throw new RangeError("read position is out of capacity.");
 		    }
 
-		    var readed = internal.buffer.slice(internal.position, Math.min(count, internal.capacity-internal.position-1));
-		    internal.position = Math.min(internal.position+readed, internal.capacity-1);
+		    var readed = internal.buffer.slice(internal.position, Math.min(count+internal.position, internal.capacity-internal.position-1));
+		    internal.position = Math.min(internal.position+readed.length, internal.capacity-1);
 
 		    return readed;
 		}
 
 		this.count = function() {
 		    return Math.max(internal.buffer.length-internal.position, 0);
-		}
-
-		this.updateCount = function() {
-		    return internal.updateCount;
 		}
 	    }
 	})();
@@ -95,28 +94,38 @@ var game = {
     	var Binder = (function () {
 	    return function (selector) {
 	    	this.timeline = function(interval, count) {
+		    var count = count || 50;
+
 		    var users = new Users(500);
-		    var count = count || 10;
+		    // 最初にアップデート
+		    users.update();
+
 		    setInterval( function () {
-			    users.update();
+			    try {
+				users.update();
+			    }
+			    catch (e) {
+				$(selector).after("<p>"+e.message+"</p>");
+			    }
 			},
 			interval
 		    );
 		    setInterval( function () {
 			    var statuses = null;
 			    try {
-				statuses = users.read(count);
+				statuses = users.read();
 			    }
 			    catch (e) {
-				statuses = users.read(users.count());
+			    	statuses = [];
 			    }
 
 			    if ( statuses.length == 0 ) { return; }
-			    if ( users.updateCount < count ) { $(selector+"~ ul").remove(); }
+
+			    // 100件まで表示させる。
+			    $(selector+"~ ul:gt("+count+")").remove();
 
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
-			    statuses.reverse();
 			    for (i=0; i<statuses.length; ++i) {
 				state = statuses[i];
 				$(selector).after(
@@ -131,10 +140,10 @@ var game = {
 					"</ul>"
 				);
 			    }
-			    $("."+sliceId).css({ opacity: "0" });
+			    $("."+sliceId).css({ opacity: "0.25" });
 			    $("."+sliceId).animate({ opacity: "1" }, 2000);
 			},
-			60
+			500
 		    );
 		}
 	    }
