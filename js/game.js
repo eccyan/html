@@ -90,16 +90,121 @@ var game = {
 	    }
 	})();
 
+	// ゲーム描画オブジェクト
+	var Graphic = (function () {
+	    return function (selector) {
+		// 内部変数
+		var internal = {
+		    context : null,
+		    width   : parseInt( $(selector).width() )      || 400,
+		    height  : parseInt( $(selector).width() )*1.33 || 400*1.33
+		}
+	    	// 幅を取得
+		$(selector).after("<canvas>Not supported canvas.</canvas>");
+		internal.context = $(selector+"~ canvas").filter("canvas").get(0).getContext('2d');
+
+		internal.color = {
+		    convert : function (r, g, b) {
+		    	return "rgb("+r+","+g+","+b+")";
+		    }
+		}
+
+		internal.transform = {
+		    reset : function () {
+			internal.context.setTransform(1, 0, 0, 1, 0, 0);
+		    },
+		}
+
+		internal.image = {
+		    create : function (src) {
+		    	var image = new Image(); 
+			image.src = src;
+			return image;
+		    },
+		}
+
+		this.draw = {
+		    fill : function (color) {
+			var color = color || internal.color.convert(0, 0, 225);
+
+			var oldFillStyle = internal.context.fillStyle;
+			internal.transform.reset();
+			internal.context.fillStyle = color; 
+			internal.context.fillRect(0, 0, internal.width, internal.height);
+			internal.context.fillStyle = oldFillStyle;
+		    },
+
+		    image : function (image, position, size) {
+			var oldFillStyle = internal.context.fillStyle;
+			internal.transform.reset();
+			internal.context.drawImage(image, position.x, position.y, size.width, size.height);
+		    },
+		}
+
+		// 公開する
+		this.color     = internal.color;
+		this.transform = internal.transform;
+		this.image     = internal.image;
+	    }
+	})();
+
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
+		this.game = function(interval) {
+		    var users = new Users(500);
+		    var g     = new Graphic(selector);
+		    var position = {x:0, y:0};
+		    var size     = {width:24, height:24};
+
+		    // 最初にアップデート
+		    users.update();
+		    setInterval( function () {
+			    try {
+				users.update();
+			    }
+			    catch (e) {
+				//$(selector).after("<p>"+e.message+"</p>");
+			    }
+			},
+			interval
+		    );
+		    g.draw.fill();
+		    setInterval( function () {
+
+			    var statuses = null;
+			    try {
+				statuses = users.read();
+			    }
+			    catch (e) {
+			    	statuses = [];
+			    }
+
+			    if ( statuses.length == 0 ) { return; }
+
+			    for (i=0; i<statuses.length; ++i) {
+			    	var state = statuses[i];
+				var icon = g.image.create(state.user.profile_image_url);
+				position.x = Math.floor(Math.random() * (400 - size.width));
+				position.y = Math.floor(Math.random() * (400 - size.height));
+				if (icon.complete) {
+				    g.draw.image(icon, position, size);
+				}
+			    }
+			},
+			100
+		    );
+		}
+
+		// タイムライン表示 
 	    	this.timeline = function(interval, count) {
-		    var count = count || 50;
+		    // デフォルト値
+		    var interval = interval || 10000;
+		    var count    = count || 50;
 
 		    var users = new Users(500);
 		    // 最初にアップデート
 		    users.update();
-
 		    setInterval( function () {
 			    try {
 				users.update();
@@ -127,7 +232,7 @@ var game = {
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
 			    for (i=0; i<statuses.length; ++i) {
-				state = statuses[i];
+				var state = statuses[i];
 				$(selector).after(
 					"<ul class="+sliceId+">"+
 					    "<li>"+
