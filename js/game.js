@@ -226,7 +226,7 @@ var game = {
 				    // アップデート時にイメージを作成
 				    for (i=0; i<statuses.length; ++i) {
 				    	var state = statuses[i];
-					var key = state.id;
+					var key = state.user.id;
 					var src = state.user.profile_image_url;
 					icons.add(key, g.image.create(src));
 				    }
@@ -253,7 +253,7 @@ var game = {
 				position.y = Math.floor(Math.random() * (g.size().height - size.height));
 
 				try {
-				    g.draw.image(icons.get(state.id), position, size);
+				    g.draw.image(icons.get(state.user.id), position, size);
 				}
 				catch (e) {
 				}
