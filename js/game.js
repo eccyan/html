@@ -156,8 +156,9 @@ var game = {
 		internal.context = internal.canvas.getContext('2d');
 
 		internal.color = {
-		    convert : function (r, g, b) {
-		    	return "rgb("+r+","+g+","+b+")";
+		    convert : function (r, g, b, a) {
+		    	var a = a || 255;
+		    	return "rgba("+r+","+g+","+b+","+a+")";
 		    }
 		}
 
@@ -194,8 +195,40 @@ var game = {
 
 		    image : function (image, position, size) {
 			var oldFillStyle = internal.context.fillStyle;
-			internal.transform.reset();
 			internal.context.drawImage(image, position.x, position.y, size.width, size.height);
+			internal.context.fillStyle = oldFillStyle;
+		    },
+
+		    balloon : function (position, size, color) {
+		    	var x = position.x;
+		    	var y = position.y;
+		    	var width = size.width;
+		    	var height = size.height;
+		    	var radius = size.height /2;
+			var anchor = 5;
+
+			internal.transform.reset();
+
+			var oldFillStyle = internal.context.fillStyle;
+			internal.context.fillStyle = color;
+
+			internal.context.beginPath();
+			internal.context.moveTo(x, y + radius);
+			internal.context.lineTo(x, y + height - radius);
+			internal.context.quadraticCurveTo(x, y + height, x + radius, y + height);
+			internal.context.lineTo(x + width - radius, y + height);
+			internal.context.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+			internal.context.lineTo(x + width, y + radius);
+			internal.context.quadraticCurveTo(x + width, y, x + width - radius, y);
+			internal.context.lineTo(x + radius, y);
+			internal.context.quadraticCurveTo(x, y, x, y + radius);
+			internal.context.closePath();
+			internal.context.moveTo(x + anchor + height/2, y/3);
+			internal.context.lineTo(x, y + height/2);
+			internal.context.lineTo(x + anchor + height/2, y + height - y/3);
+			internal.context.closePath();
+
+			internal.context.fill();
 			internal.context.fillStyle = oldFillStyle;
 		    },
 		}
@@ -263,11 +296,11 @@ var game = {
     	var Binder = (function () {
 	    return function (selector) {
 		this.game = function(interval) {
-		    var users    = new Users(500);
-		    var icons    = new Images();
-		    var g        = new Graphic(selector);
-		    var position = {x:0, y:0};
-		    var size     = {width:64, height:64};
+		    var users = new Users(500);
+		    var icons = new Images();
+		    var g     = new Graphic(selector);
+
+		    var characters = [];
 
 		    g.draw.clear( g.color().convert(0, 0, 225) );
 		    setInterval( function () {
@@ -296,6 +329,21 @@ var game = {
 			    if ( statuses.length == 0 ) { return; }
 
 			    for (i=0; i<statuses.length; ++i) {
+			    	var state = statuses[i];
+			    	characters.push(new Character(state, icons));
+			    }
+
+			    for (i=0; i<characters.length; ++i) {
+				var character = characters[i];
+				dx = Math.floor(Math.random() * g.size().width );
+				dy = Math.floor(Math.random() * g.size().height);
+				character.translate(dx, dy); 
+				g.draw.balloon(
+				    {x:character.matrix().dx, y:character.matrix().dy},
+				    {width:g.size().width/3, height:32},
+				    g.color().convert(128, 128, 100)
+				);
+				
 			    }
 			},
 			100

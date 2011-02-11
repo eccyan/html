@@ -33,11 +33,11 @@ $con = new Controller();
 			<img src="http://graph.facebook.com/521665023/picture" alt="プロファイル画像" />
 		</a>
 	</p>
-	<p class="game">
-	    <span id="game-placeholder"></span>
-	</p>
 	<p class="corkboard">
 	    <span id="corkboard-placeholder"></span>
+	</p>
+	<p class="game">
+	    <span id="game-placeholder"></span>
 	</p>
 	<p class="timeline">
 	    <span id="timeline-placeholder"></span>
