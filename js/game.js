@@ -149,7 +149,7 @@ var game = {
 		}
 	    	// 幅を取得
 		$(selector).after("<canvas>Not supported canvas.</canvas>");
-		internal.context = $(selector+"~ canvas").filter("canvas").css({width:internal.width, height:internal.height});
+		internal.context = $(selector+"~ canvas").filter("canvas").attr({width:internal.width, height:internal.height});
 		internal.context = $(selector+"~ canvas").filter("canvas").get(0).getContext('2d');
 
 		internal.color = {
@@ -162,6 +162,12 @@ var game = {
 		    reset : function () {
 			internal.context.setTransform(1, 0, 0, 1, 0, 0);
 		    },
+		    set : function (T) {
+			internal.context.setTransform(T.m11, T.m12, T.m21, T.m22, T.dx, T.dy);
+		    },
+		    append : function (T) {
+			internal.context.transform(T.m11, T.m12, T.m21, T.m22, T.dx, T.dy);
+		    }
 		}
 
 		internal.image = {
@@ -187,6 +193,7 @@ var game = {
 			var oldFillStyle = internal.context.fillStyle;
 			internal.transform.reset();
 			internal.context.drawImage(image, position.x, position.y, size.width, size.height);
+			internal.context.fillStyle = oldFillStyle;
 		    },
 		}
 
@@ -205,7 +212,7 @@ var game = {
 		    var icons    = new Images();
 		    var g        = new Graphic(selector);
 		    var position = {x:0, y:0};
-		    var size     = {width:24, height:24};
+		    var size     = {width:64, height:64};
 
 		    g.draw.fill();
 
