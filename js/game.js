@@ -171,6 +171,15 @@ var game = {
 		    },
 		    append : function (T) {
 			internal.context.transform(T.m11, T.m12, T.m21, T.m22, T.dx, T.dy);
+		    },
+		    scale : function (scale) {
+			internal.context.scale(scale.x, scale.y);
+		    },
+		    rotate : function (radian) {
+			internal.context.rotate(radian);
+		    },
+		    translate : function (position) {
+			internal.context.translate(position.x, position.y);
 		    }
 		}
 
@@ -194,42 +203,7 @@ var game = {
 		    },
 
 		    image : function (image, position, size) {
-			var oldFillStyle = internal.context.fillStyle;
 			internal.context.drawImage(image, position.x, position.y, size.width, size.height);
-			internal.context.fillStyle = oldFillStyle;
-		    },
-
-		    balloon : function (position, size, color) {
-		    	var x = position.x;
-		    	var y = position.y;
-		    	var width = size.width;
-		    	var height = size.height;
-		    	var radius = size.height /2;
-			var anchor = 5;
-
-			internal.transform.reset();
-
-			var oldFillStyle = internal.context.fillStyle;
-			internal.context.fillStyle = color;
-
-			internal.context.beginPath();
-			internal.context.moveTo(x, y + radius);
-			internal.context.lineTo(x, y + height - radius);
-			internal.context.quadraticCurveTo(x, y + height, x + radius, y + height);
-			internal.context.lineTo(x + width - radius, y + height);
-			internal.context.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-			internal.context.lineTo(x + width, y + radius);
-			internal.context.quadraticCurveTo(x + width, y, x + width - radius, y);
-			internal.context.lineTo(x + radius, y);
-			internal.context.quadraticCurveTo(x, y, x, y + radius);
-			internal.context.closePath();
-			internal.context.moveTo(x + anchor + height/2, y/3);
-			internal.context.lineTo(x, y + height/2);
-			internal.context.lineTo(x + anchor + height/2, y + height - y/3);
-			internal.context.closePath();
-
-			internal.context.fill();
-			internal.context.fillStyle = oldFillStyle;
 		    },
 		}
 
@@ -246,37 +220,14 @@ var game = {
 	    	var internal =  {
 		    state  : state,
 		    images : images,
-		    m : {m11:1, m12:0, m21:0, m22:1, dx:0, dy:0}
+		    accel  : {dx:0, dx:0}
 		}
 
-		this.reset = function() {
-		    internal.m = {m11:1, m12:0, m21:0, m22:1, dx:0, dy:0}
-		}
+		// 行列忘れたからとりあえず
+		this.rotate    = 0;
+		this.scale     = { sx:0, sy:0 }; 
+		this.translate = { x:0, y:0 };
 
-		this.rotate = function(radian) {
-		    internal.m = {
-		    	m11:internal.m.m11* Math.cos(radian), m12:internal.m.m12*Math.sin(radian),
-			m21:internal.m.m21*-Math.sin(radian), m22:internal.m.m22*Math.cos(radian),
-			dx:internal.dx, dy:internal.dy
-		    }
-		}
-
-		this.scale = function(sx, sy) {
-		    internal.m = {
-		    	m11:internal.m.m11*sx, m12:internal.m.m12,
-			m21:internal.m.m21   , m22:internal.m.m22*sy,
-			dx:internal.dx, dy:internal.dy
-		    }
-		}
-
-		this.translate = function(dx, dy) {
-		    internal.m = {
-		    	m11:internal.m.m11, m12:internal.m.m12,
-			m21:internal.m.m21, m22:internal.m.m22,
-			dx:internal.dx+dx, dy:internal.dy+dy
-		    }
-		}
-		
 		this.text = function() {
 		    return internal.state.text;
 		}
@@ -284,10 +235,6 @@ var game = {
 		this.image = function() {
 		    var key = internal.state.user.id;
 		    return images.get(key);
-		}
-
-		this.matrix = function() {
-		    return internal.m;
 		}
 	    }
 	})();
@@ -302,7 +249,6 @@ var game = {
 
 		    var characters = [];
 
-		    g.draw.clear( g.color().convert(0, 0, 225) );
 		    setInterval( function () {
 			    users.update( function (statuses) {
 				    // アップデート時にイメージを作成
@@ -330,23 +276,29 @@ var game = {
 
 			    for (i=0; i<statuses.length; ++i) {
 			    	var state = statuses[i];
-			    	characters.push(new Character(state, icons));
+				var character =  new Character(state, icons)
+				character.translate.x = Math.floor(Math.random() * g.size().width );
+				character.translate.y = Math.floor(Math.random() * g.size().height);
+			    	characters.push(character);
 			    }
-
+		       },
+		       1000
+		   );
+		   setInterval( function () {
+			    g.draw.clear( g.color().convert(0, 0, 225) );
 			    for (i=0; i<characters.length; ++i) {
 				var character = characters[i];
-				dx = Math.floor(Math.random() * g.size().width );
-				dy = Math.floor(Math.random() * g.size().height);
-				character.translate(dx, dy); 
-				g.draw.balloon(
-				    {x:character.matrix().dx, y:character.matrix().dy},
-				    {width:g.size().width/3, height:32},
-				    g.color().convert(128, 128, 100)
-				);
+				character.rotate = character.rotate+10*Math.PI/180
+
+				g.transform().reset();
+				g.transform().translate({x:character.translate.x, y:character.translate.y});
+				g.transform().rotate(character.rotate); 
+				g.transform().translate({x:-16, y:-16});
+				g.draw.image(character.image(), {x:0, y:0}, {width:32, height:32});
 				
 			    }
 			},
-			100
+			60
 		    );
 		}
 
