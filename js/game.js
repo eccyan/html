@@ -197,6 +197,11 @@ var game = {
 		    },
 		}
 
+		this.size = function() {
+		    return { width : internal.width, height : internal.height };
+		}
+		
+
 		// 公開する
 		this.color     = internal.color;
 		this.transform = internal.transform;
@@ -244,8 +249,8 @@ var game = {
 
 			    for (i=0; i<statuses.length; ++i) {
 			    	var state = statuses[i];
-				position.x = Math.floor(Math.random() * (400 - size.width));
-				position.y = Math.floor(Math.random() * (400 - size.height));
+				position.x = Math.floor(Math.random() * (g.size().width - size.width));
+				position.y = Math.floor(Math.random() * (g.size().height - size.height));
 
 				try {
 				    g.draw.image(icons.get(state.id), position, size);
