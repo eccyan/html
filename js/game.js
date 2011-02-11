@@ -47,10 +47,10 @@ var game = {
 		};
 
 		// 更新
-		this.update = function () {
-		    internal.twitter.statuses(function (T) {
-		    	var callback = callback || function () { };
+		this.update = function (callback) {
+		    var callback = callback || function () { };
 
+		    internal.twitter.statuses(function (T) {
 			if (!internal.twitter.updated()) { return; }
 
 			var contents = T.data.contents;
@@ -66,6 +66,8 @@ var game = {
 			internal.buffer = internal.buffer.slice( Math.min(internal.position+1, internal.capacity-1), Math.min(internal.buffer.length, internal.capacity-1) );
 			internal.buffer = internal.buffer.concat( sliced );
 			internal.position = 0;
+
+			callback(sliced);
 		    });
 		}
 
@@ -90,17 +92,64 @@ var game = {
 	    }
 	})();
 
+	// イメージ処理オブジェクト
+	var Images = (function () {
+	    return function () {
+		// 内部変数
+		var internal = {
+		    uncompleted : [],
+		    completed   : [],
+		    position    : 0,
+		};
+
+		setInterval(function () {
+			// 読み込みを調べる
+			for (key in internal.uncompleted) {
+			    var image = internal.uncompleted[key];
+			    if ( image.complete ) {
+				internal.completed[key] = image;
+				delete internal.uncompleted[key];
+			    }
+			}
+		    },
+		    60
+		);
+
+		this.add = function(key, image) {
+		    // 未読み込み
+		    internal.uncompleted[key] = image;
+		}
+
+		this.remove = function(key) {
+		   for (key in internal.completed) {
+		       if (key == key) {
+			   delete internal.completed[key];
+			   return;
+		       }
+		   }
+
+		    // キーが見つからないか読み込みが終っていない
+		   throw new RangeError("Not found key or uncompleted read.");
+		}
+
+		this.get = function(key) {
+		    return internal.completed[key];
+		}
+	    }
+	})();
+
 	// ゲーム描画オブジェクト
 	var Graphic = (function () {
 	    return function (selector) {
 		// 内部変数
 		var internal = {
 		    context : null,
-		    width   : parseInt( $(selector).width() )      || 400,
-		    height  : parseInt( $(selector).width() )*1.33 || 400*1.33
+		    width   : parseInt( $(selector).outerWidth() )      || 400,
+		    height  : parseInt( $(selector).outerWidth() )*1.33 || 400*1.33
 		}
 	    	// 幅を取得
 		$(selector).after("<canvas>Not supported canvas.</canvas>");
+		internal.context = $(selector+"~ canvas").filter("canvas").css({width:internal.width, height:internal.height});
 		internal.context = $(selector+"~ canvas").filter("canvas").get(0).getContext('2d');
 
 		internal.color = {
@@ -152,24 +201,28 @@ var game = {
     	var Binder = (function () {
 	    return function (selector) {
 		this.game = function(interval) {
-		    var users = new Users(500);
-		    var g     = new Graphic(selector);
+		    var users    = new Users(500);
+		    var icons    = new Images();
+		    var g        = new Graphic(selector);
 		    var position = {x:0, y:0};
 		    var size     = {width:24, height:24};
 
-		    // 最初にアップデート
-		    users.update();
+		    g.draw.fill();
+
 		    setInterval( function () {
-			    try {
-				users.update();
-			    }
-			    catch (e) {
-				//$(selector).after("<p>"+e.message+"</p>");
-			    }
+				users.update( function (statuses) {
+				    // アップデート時にイメージを作成
+				    for (i=0; i<statuses.length; ++i) {
+				    	var state = statuses[i];
+					var key = state.id;
+					var src = state.user.profile_image_url;
+					icons.add(key, g.image.create(src));
+				    }
+				}
+			    );
 			},
 			interval
 		    );
-		    g.draw.fill();
 		    setInterval( function () {
 
 			    var statuses = null;
@@ -184,11 +237,13 @@ var game = {
 
 			    for (i=0; i<statuses.length; ++i) {
 			    	var state = statuses[i];
-				var icon = g.image.create(state.user.profile_image_url);
 				position.x = Math.floor(Math.random() * (400 - size.width));
 				position.y = Math.floor(Math.random() * (400 - size.height));
-				if (icon.complete) {
-				    g.draw.image(icon, position, size);
+
+				try {
+				    g.draw.image(icons.get(state.id), position, size);
+				}
+				catch (e) {
 				}
 			    }
 			},

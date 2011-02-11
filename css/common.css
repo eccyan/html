@@ -17,6 +17,7 @@ html>/**/body { font-size: 10px; /* Except IE */ }
 .timeline { background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
 .timeline h1 { color:#0a0a0a; font-size:120%; vertical-align:middle; }
 .timeline ul { list-style:none; color:#138; text-align:left; border-top-style:solid; border-width:0.25em; border-color:#0a0a0a; margin:0; }
+.game { margin: 0; width: 400px };
 .follow { float:left; margin:1em 1em 1em 1em; }
 .like { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
 

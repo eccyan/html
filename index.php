@@ -13,11 +13,12 @@ $con = new Controller();
 	<meta property="og:url" content="http://eccyan.com/" />
 	<meta property="og:image" content="http://graph.facebook.com/521665023/picture" />
 	<meta property="og:site_name" content="えっちゃん.com" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+	<meta name="viewport" content="width=400px, initial-scale=1, maximum-scale=1" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
-	<script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js" type="text/javascript"></script>
-	<script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js" type="text/javascript"></script>
 	<script src="http://platform.twitter.com/anywhere.js?id=mGORvgD7zbKiXmysERthw&v=1" type="text/javascript"></script>
 	<script src="js/game.js" type="text/javascript"></script>
 
@@ -57,7 +58,7 @@ $con = new Controller();
     twttr.anywhere(function (T) { T("#follow-placeholder").followButton('eccyan'); });
 </script>
 <script type="text/javascript">
-    game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
+    //game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
 </script>
 <script type="text/javascript">
     game.execute(function(T) { T("#game-placeholder").game(10000); });
