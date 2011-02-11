@@ -14,9 +14,10 @@ $con = new Controller();
 	<meta property="og:image" content="http://graph.facebook.com/521665023/picture" />
 	<meta property="og:site_name" content="えっちゃん.com" />
 
-	<meta name="viewport" content="width=400px, initial-scale=1, maximum-scale=1" />
+	<meta name="viewport" content="width=400px, user-scalable=no" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
 	<script src="http://platform.twitter.com/anywhere.js?id=mGORvgD7zbKiXmysERthw&v=1" type="text/javascript"></script>
