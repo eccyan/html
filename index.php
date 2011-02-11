@@ -62,7 +62,7 @@ $con = new Controller();
     //game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
 </script>
 <script type="text/javascript">
-    game.execute(function(T) { T("#game-placeholder").game(10000); });
+    game.execute(function(T) { T("#game-placeholder").corkboard(10000); });
 </script>
 </body>
 </html>

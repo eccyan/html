@@ -145,14 +145,15 @@ var game = {
 	    return function (selector) {
 		// 内部変数
 		var internal = {
+		    canvas  : null,
 		    context : null,
 		    width   : parseInt( $(selector).outerWidth() )      || 400,
 		    height  : parseInt( $(selector).outerWidth() )*1.33 || 400*1.33
 		}
-	    	// 幅を取得
 		$(selector).after("<canvas>Not supported canvas.</canvas>");
-		internal.context = $(selector+"~ canvas").filter("canvas").attr({width:internal.width, height:internal.height});
-		internal.context = $(selector+"~ canvas").filter("canvas").get(0).getContext('2d');
+		$(selector+"~ canvas").filter("canvas").attr({width:internal.width, height:internal.height});
+		internal.canvas  = $(selector+"~ canvas").filter("canvas").get(0);
+		internal.context = internal.canvas.getContext('2d');
 
 		internal.color = {
 		    convert : function (r, g, b) {
@@ -181,7 +182,7 @@ var game = {
 		}
 
 		this.draw = {
-		    fill : function (color) {
+		    clear : function (color) {
 			var color = color || internal.color.convert(0, 0, 225);
 
 			var oldFillStyle = internal.context.fillStyle;
@@ -199,29 +200,30 @@ var game = {
 		    },
 		}
 
-		this.size = function() {
-		    return { width : internal.width, height : internal.height };
-		}
-		
+		this.size      = function() { return { width : internal.width, height : internal.height }; }
+		this.canvas    = function() { return internal.canvas; }
+		this.color     = function() { return internal.color; }
+		this.transform = function () { return internal.transform; }
+		this.image     = function () { return internal.image; }
+	    }
+	})();
 
-		// 公開する
-		this.color     = internal.color;
-		this.transform = internal.transform;
-		this.image     = internal.image;
+	var Icon = (function () {
+	    return function (state, images) {
 	    }
 	})();
 
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
-		this.game = function(interval) {
+		this.corkboard = function(interval) {
 		    var users    = new Users(500);
 		    var icons    = new Images();
 		    var g        = new Graphic(selector);
 		    var position = {x:0, y:0};
 		    var size     = {width:64, height:64};
 
-		    g.draw.fill();
+		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
 
 		    setInterval( function () {
 				users.update( function (statuses) {
@@ -230,7 +232,7 @@ var game = {
 				    	var state = statuses[i];
 					var key = state.user.id;
 					var src = state.user.profile_image_url;
-					icons.add(key, g.image.create(src));
+					icons.add(key, g.image().create(src));
 				    }
 				}
 			    );
