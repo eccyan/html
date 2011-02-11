@@ -36,6 +36,9 @@ $con = new Controller();
 	<p class="game">
 	    <span id="game-placeholder"></span>
 	</p>
+	<p class="corkboard">
+	    <span id="corkboard-placeholder"></span>
+	</p>
 	<p class="timeline">
 	    <span id="timeline-placeholder"></span>
 	</p>
@@ -62,7 +65,10 @@ $con = new Controller();
     //game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
 </script>
 <script type="text/javascript">
-    game.execute(function(T) { T("#game-placeholder").corkboard(10000); });
+    game.execute(function(T) { T("#corkboard-placeholder").corkboard(1000000); });
+</script>
+<script type="text/javascript">
+    game.execute(function(T) { T("#game-placeholder").game(10000); });
 </script>
 </body>
 </html>

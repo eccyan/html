@@ -208,25 +208,70 @@ var game = {
 	    }
 	})();
 
-	var Icon = (function () {
+	var Character = (function () {
 	    return function (state, images) {
+	    	var internal =  {
+		    state  : state,
+		    images : images,
+		    m : {m11:1, m12:0, m21:0, m22:1, dx:0, dy:0}
+		}
+
+		this.reset = function() {
+		    internal.m = {m11:1, m12:0, m21:0, m22:1, dx:0, dy:0}
+		}
+
+		this.rotate = function(radian) {
+		    internal.m = {
+		    	m11:internal.m.m11* Math.cos(radian), m12:internal.m.m12*Math.sin(radian),
+			m21:internal.m.m21*-Math.sin(radian), m22:internal.m.m22*Math.cos(radian),
+			dx:internal.dx, dy:internal.dy
+		    }
+		}
+
+		this.scale = function(sx, sy) {
+		    internal.m = {
+		    	m11:internal.m.m11*sx, m12:internal.m.m12,
+			m21:internal.m.m21   , m22:internal.m.m22*sy,
+			dx:internal.dx, dy:internal.dy
+		    }
+		}
+
+		this.translate = function(dx, dy) {
+		    internal.m = {
+		    	m11:internal.m.m11, m12:internal.m.m12,
+			m21:internal.m.m21, m22:internal.m.m22,
+			dx:internal.dx+dx, dy:internal.dy+dy
+		    }
+		}
+		
+		this.text = function() {
+		    return internal.state.text;
+		}
+
+		this.image = function() {
+		    var key = internal.state.user.id;
+		    return images.get(key);
+		}
+
+		this.matrix = function() {
+		    return internal.m;
+		}
 	    }
 	})();
 
 	// バインドオブジェクト
     	var Binder = (function () {
 	    return function (selector) {
-		this.corkboard = function(interval) {
+		this.game = function(interval) {
 		    var users    = new Users(500);
 		    var icons    = new Images();
 		    var g        = new Graphic(selector);
 		    var position = {x:0, y:0};
 		    var size     = {width:64, height:64};
 
-		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
-
+		    g.draw.clear( g.color().convert(0, 0, 225) );
 		    setInterval( function () {
-				users.update( function (statuses) {
+			    users.update( function (statuses) {
 				    // アップデート時にイメージを作成
 				    for (i=0; i<statuses.length; ++i) {
 				    	var state = statuses[i];
@@ -240,7 +285,57 @@ var game = {
 			interval
 		    );
 		    setInterval( function () {
+			    var statuses = null;
+			    try {
+				statuses = users.read();
+			    }
+			    catch (e) {
+			    	statuses = [];
+			    }
 
+			    if ( statuses.length == 0 ) { return; }
+
+			    for (i=0; i<statuses.length; ++i) {
+			    }
+			},
+			100
+		    );
+		}
+
+		this.corkboard = function(interval) {
+		    var users    = new Users(500);
+		    var icons    = new Images();
+		    var g        = new Graphic(selector);
+		    var position = {x:0, y:0};
+		    var size     = {width:64, height:64};
+
+		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
+
+		    users.update( function (statuses) {
+			    // アップデート時にイメージを作成
+			    for (i=0; i<statuses.length; ++i) {
+				var state = statuses[i];
+				var key = state.user.id;
+				var src = state.user.profile_image_url;
+				icons.add(key, g.image().create(src));
+			    }
+			}
+		    );
+		    setInterval( function () {
+			    users.update( function (statuses) {
+				    // アップデート時にイメージを作成
+				    for (i=0; i<statuses.length; ++i) {
+				    	var state = statuses[i];
+					var key = state.user.id;
+					var src = state.user.profile_image_url;
+					icons.add(key, g.image().create(src));
+				    }
+				}
+			    );
+			},
+			interval
+		    );
+		    setInterval( function () {
 			    var statuses = null;
 			    try {
 				statuses = users.read();
