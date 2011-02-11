@@ -57,7 +57,7 @@ $con = new Controller();
     twttr.anywhere(function (T) { T("#follow-placeholder").followButton('eccyan'); });
 </script>
 <script type="text/javascript">
-    game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
+    //game.execute(function(T) { T("#timeline-placeholder").timeline(10000); });
 </script>
 <script type="text/javascript">
     game.execute(function(T) { T("#game-placeholder").game(10000); });
