@@ -117,7 +117,9 @@ var game = {
 
 		this.add = function(key, image) {
 		    // 未読み込み
-		    internal.uncompleted[key] = image;
+		    if (!internal.completed[key]) {
+			internal.uncompleted[key] = image;
+		    }
 		}
 
 		this.remove = function(key) {
