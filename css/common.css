@@ -11,13 +11,14 @@ hr { }
 body { font-size: 62.5%; /* IE */}
 html>/**/body { font-size: 10px; /* Except IE */ }
 
-.wrapper{ margin: 0 auto; width: 400px; font-size: 140%; border-radius:1em; background-color: #0a0a0a; }
+.wrapper{ margin: 0 auto; width: 468px; font-size: 140%; border-radius:1em; background-color: #0a0a0a; }
 .connect { margin:0em 1em 0em 1em; }
 .connect button { color:#FFF; background-color:#64AAEF; border-radius:0.5em; height:2.5em; }
 .timeline { background-color:#bBD; font-size: 80%; border-radius:0.5em; margin:1em 1em 1em 1em; }
 .timeline h1 { color:#0a0a0a; font-size:120%; vertical-align:middle; }
 .timeline ul { list-style:none; color:#138; text-align:left; border-top-style:solid; border-width:0.25em; border-color:#0a0a0a; margin:0; }
-.game { margin: 0; width: 400px };
+.game      { margin: 0; width: 468px };
+.corkboard { margin: 0; width: 468px };
 .follow { float:left; margin:1em 1em 1em 1em; }
 .like { clear:both; margin:1em 1em 1em 1em; background-color:#6b6b6b; border-radius:0.5em; }
 
