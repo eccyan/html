@@ -67,7 +67,27 @@ if ( empty($cache) ) {
 
 	$url = $req->to_url();
 	$header = array();
-	$responce = $this->http('GET', $url, $header);
+
+	$curl = curl_init();
+
+	curl_setopt($curl, CURLOPT_CONNECTTIMEOUT,10);
+	curl_setopt($curl, CURLOPT_TIMEOUT, 10);
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+	curl_setopt($curl, CURLOPT_HEADER, false);
+	curl_setopt($curl, CURLOPT_URL, $url);
+
+	$responce = curl_exec($curl);
+	$error    = curl_error($curl);
+	$info     = curl_getinfo($curl);
+
+	curl_close ($curl);
+
+	// エラーが発生した場合
+	if ( !empty($error) ) {
+	    die ("$error");
+	}
 
 	$parsed = OAuthUtil::parse_parameters($responce);
 	$token = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
