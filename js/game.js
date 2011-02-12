@@ -250,16 +250,23 @@ var game = {
 		    var characters = [];
 
 		    setInterval( function () {
-			    users.update( function (statuses) {
-				    // アップデート時にイメージを作成
-				    for (i=0; i<statuses.length; ++i) {
-				    	var state = statuses[i];
-					var key = state.user.id;
-					var src = state.user.profile_image_url;
-					icons.add(key, g.image().create(src));
+			    try { 	
+				users.update( function (statuses) {
+					// アップデート時にイメージを作成
+					for (i=0; i<statuses.length; ++i) {
+					    var state = statuses[i];
+					    var key = state.user.id;
+					    var src = state.user.profile_image_url;
+					    icons.add(key, g.image().create(src));
+					}
 				    }
-				}
-			    );
+				);
+			    }
+			    catch (e) {
+			    	$(selector+" ~ p").filter("p").remove();
+			    	$(selector).after("<p>"+e.message+"</p>");
+			    	$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+			    }
 			},
 			interval
 		    );
@@ -312,12 +319,19 @@ var game = {
 		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
 
 		    users.update( function (statuses) {
-			    // アップデート時にイメージを作成
-			    for (i=0; i<statuses.length; ++i) {
-				var state = statuses[i];
-				var key = state.user.id;
-				var src = state.user.profile_image_url;
-				icons.add(key, g.image().create(src));
+			    try {
+				// アップデート時にイメージを作成
+				for (i=0; i<statuses.length; ++i) {
+				    var state = statuses[i];
+				    var key = state.user.id;
+				    var src = state.user.profile_image_url;
+				    icons.add(key, g.image().create(src));
+				}
+			    }
+			    catch (e) {
+			    	$(selector+" ~ p").filter("p").remove();
+			    	$(selector).after("<p>"+e.message+"</p>");
+			    	$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
 			    }
 			}
 		    );
