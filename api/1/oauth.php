@@ -26,10 +26,26 @@ if ( !empty($anywhere->id)  && strcmp($anywhere->signature, $signature) == 0 ) {
     $cache = memcache_get($connect, "{$anywhere->id}:{$anywhere->signature}");
 }
 
-// Access Token
+$params = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
+
+// OAuthに必要なURLを取得
+$urls->access    = @rawurldecode(@$params['access']);
+$urls->request   = @rawurldecode(@$params['request']);
+$urls->authorize = @rawurldecode(@$params['authorize']);
+$urls->callback  = @rawurldecode(@$params['callback']);
+
+// 削除する
+unset($params['access']); 
+unset($params['request']);
+unset($params['authorize']);
+unset($params['callback']);
+
 if ( empty($cache) ) {
-    $endpoint = 'http://twitter.com/oauth/access_token';
-    $params = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
+    if ( empty($urls->access) || empty($urls->request) || empty($urls->authorize) ) {
+	header("Status: 400 Bad Request");
+    }
+    
+    $endpoint = $urls->access;
     $req = OAuthRequest::from_consumer_and_token($consumer, NULL, "GET", $endpoint, $params);
     $req->sign_request($signatureMethod, $consumer, NULL);
 
@@ -54,12 +70,13 @@ if ( empty($cache) ) {
 
     // エラーが発生した場合
     if ( !empty($error) ) {
-	die ("$error");
+	error_log( var_dump("$error", true) );
+	header("Status: 500 Internal Server Error");
     }
 
     if ( empty($responce) || preg_match("/^[[:space:]]+$/", $responce) > 0 ) {
 	// Request token
-	$endpoint = 'http://twitter.com/oauth/request_token';
+	$endpoint = $urls->request;
 	$params = array();
 
 	$req = OAuthRequest::from_consumer_and_token($consumer, NULL, "GET", $endpoint, $params);
@@ -86,24 +103,41 @@ if ( empty($cache) ) {
 
 	// エラーが発生した場合
 	if ( !empty($error) ) {
-	    die ("$error");
+	    error_log( var_dump("$error", true) );
+	    header("Status: 500 Internal Server Error");
 	}
 
 	$parsed = OAuthUtil::parse_parameters($responce);
 	$token = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
 
 	// Authorize 
-	$endpoint = "https://api.twitter.com/oauth/authorize?oauth_token={$token->key}";
+	$endpoint = $urls->authorize."?oauth_token={$token->key}";
 	http_redirect($endpoint);
+    }
+    else {
+	$parsed = OAuthUtil::parse_parameters($responce);
+	$token  = new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
+	$uid    = $parsed['user_id'];
+
+	$signature = @sha1($uid.$config->secret);
+	memcache_set($connect, "$uid:$signature", json_encode($token), 0, 86400); 
+	setcookie("twitter_anywhere_identity", "$uid:$signature", null, '/');
     }
 }
 
-// リファラに返す 
-$referer = @$_SERVER['HTTP_REFERER'];
-if ( !empty($referer) ) {
-    http_redirect($referer);
+if ( empty($urls->callback) ) {
+    header ("Status: 400 Bad Request");
 }
 
-die ("Already completed OAuth.");
+header("Content-Type:text/html; charset=utf-8");
+$html = <<<HTML
+<html>
+	<body>
+		<p>Redirecting <a href='{$urls->callback}'>{$urls->callback}</a></p>
+	</body>
+	<script>window.location.href='{$urls->callback}'</script>
+</html>
+HTML;
+echo $html;
 
 ?>

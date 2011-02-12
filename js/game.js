@@ -427,9 +427,86 @@ var game = {
 };
 
 var oauth = {
+    urls : {
+    	request   : "http://twitter.com/oauth/request_token",
+    	access    : "http://twitter.com/oauth/access_token",
+    	authorize : "http://twitter.com/oauth/authorize",
+    },
     proxy : function (url) {
 	return "http://eccyan.com/p.php?url=" + encodeURIComponent(url);
     },
+
+    // 認証処理
+    authorize : function (urls, callback) {
+	var callback   = function (T) { };
+
+	var p = [];
+	p.access    = encodeURIComponent(urls.access);
+	p.request   = encodeURIComponent(urls.request);
+	p.authorize = encodeURIComponent(urls.authorize);
+
+	var query = '';
+	for ( var key in p ) {
+	    var value = p[key];
+	    if (value) {
+		var q = query.indexOf('?');
+		if (q < 0) query += '?';
+		else       query += '&';
+		query += key+'='+value;
+	    }
+	}
+
+	var url = 'http://eccyan.com/api/1/oauth'+query;
+	$(location).attr( "href", url );
+    },
+
+    // API アクセス URL を取得
+    url : function () {
+	var method     = 'GET';
+	var endpoint   = null;
+	var parameters = [];
+	var callback   = function (T) { };
+	switch (arguments.length) {
+	    case 2: 
+		endpoint = arguments[0];
+		callback = arguments[1] || function (T) { };
+		break;
+	    case 3: 
+		endpoint   = arguments[0];
+		parameters = arguments[1] || [];
+		callback   = arguments[2] || function (T) { };
+		break;
+	}
+
+	// Query String の作成
+	var p = parameters;
+	p.m  = method;
+	p.ep = endpoint;
+
+	var query = '';
+	for ( var key in p ) {
+	    var value = p[key];
+	    if (value) {
+		var q = query.indexOf('?');
+		if (q < 0) query += '?';
+		else       query += '&';
+		query += key+'='+value;
+	    }
+	}
+
+	var urls      = this.urls;
+	var authorize = this.authorize;
+	var callback_ = function (T) {
+	    if ( !T ) {
+		authorize(urls, callback);
+	    }
+	    callback(T);
+	}
+
+	var url = 'http://eccyan.com/api/1/oauth_url'+query;
+	$.getJSON(url, callback_);
+    },
+
     send : function () {
 	var method     = 'GET';
 	var endpoint   = null;
@@ -468,42 +545,4 @@ var oauth = {
 	    }
 	);
     },
-
-    // API アクセス URL を取得
-    url : function () {
-	var method     = 'GET';
-	var endpoint   = null;
-	var parameters = [];
-	var callback   = function (T) { };
-	switch (arguments.length) {
-	    case 2: 
-		endpoint = arguments[0];
-		callback = arguments[1] || function (T) { };
-		break;
-	    case 3: 
-		endpoint   = arguments[0];
-		parameters = arguments[1] || [];
-		callback   = arguments[2] || function (T) { };
-		break;
-	}
-
-	// Query String の作成
-	var p = parameters;
-	p.m  = method;
-	p.ep = endpoint;
-
-	var query = '';
-	for ( var key in p ) {
-	    var value = p[key];
-	    if (value) {
-		var q = query.indexOf('?');
-		if (q < 0) query += '?';
-		else       query += '&';
-		query += key+'='+value;
-	    }
-	}
-
-	var url = 'http://eccyan.com/api/1/oauth_url'+query;
-	$.getJSON(url, callback);
-    }
 };
