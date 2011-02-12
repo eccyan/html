@@ -2,7 +2,7 @@
 <html lang=ja>
 <head>
 	<meta charset="UTF-8" />
-	<meta property="og:title" content="えっちゃん.com/>
+	<meta property="og:title" content="えっちゃん.com" />
 	<meta property="og:type" content="website" />
 	<meta property="og:description" content="えっちゃんのサイト" />
 	<meta property="og:url" content="http://eccyan.com/" />
@@ -64,6 +64,20 @@
 </script>
 <script type="text/javascript">
     game.execute(function(T) { T("#game-placeholder").game(10000); });
+</script>
+<script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1887088-3']);
+    _gaq.push(['_setDomainName', '.eccyan.com']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
 </script>
 </body>
 </html>
