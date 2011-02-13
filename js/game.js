@@ -153,8 +153,11 @@ var game = {
 		    height  : parseInt( $(selector).outerWidth() )*1.33 || 400*1.33
 		}
 		$(selector).after("<canvas>Not supported canvas.</canvas>");
-		$(selector+"~ canvas").filter("canvas").attr({width:internal.width, height:internal.height});
-		internal.canvas  = $(selector+"~ canvas").filter("canvas").get(0);
+		internal.canvas = $(selector+"~ canvas").filter("canvas").get(0);
+		$(internal.canvas)
+		    .attr({width:internal.width, height:internal.height})
+		    .css({width:0, height:0, opacity:0})
+		    .animate({width:internal.width, height:internal.height, opacity:1}, 1500);
 		internal.context = internal.canvas.getContext('2d');
 
 		internal.color = {
@@ -245,141 +248,154 @@ var game = {
     	var Binder = (function () {
 	    return function (selector) {
 		this.game = function(interval) {
-		    var users = new Users(500);
-		    var icons = new Images();
-		    var g     = new Graphic(selector);
+		    $(selector).after("<div>Start Game</div>");
+		    $(selector+"~ div").filter("div")
+			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundColor:"blue", borderRadius:"0.5em" })
+			.click(function () {
+			    $(selector+"~ div").filter("div").remove();
 
-		    var characters = [];
+			var users = new Users(500);
+			var icons = new Images();
+			var g     = new Graphic(selector);
 
-		    setInterval( function () {
-			    users.update(
-				function (statuses) {
-				    // アップデート時にイメージを作成
-				    for (i=0; i<statuses.length; ++i) {
-					var state = statuses[i];
-					var key = state.user.id;
-					var src = state.user.profile_image_url;
-					icons.add(key, g.image().create(src));
+			var characters = [];
+
+			setInterval( function () {
+				users.update(
+				    function (statuses) {
+					// アップデート時にイメージを作成
+					for (i=0; i<statuses.length; ++i) {
+					    var state = statuses[i];
+					    var key = state.user.id;
+					    var src = state.user.profile_image_url;
+					    icons.add(key, g.image().create(src));
+					}
+				    },
+				    function (T) {
+					$(selector+" ~ p").filter("p").remove();
+					$(selector).after("<p>"+T.data.contents.error+"</p>");
+					$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
 				    }
-				},
-				function (T) {
-				    $(selector+" ~ p").filter("p").remove();
-				    $(selector).after("<p>"+T.data.contents.error+"</p>");
-				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+				);
+			    },
+			    interval
+			);
+			setInterval( function () {
+				var statuses = null;
+				try {
+				    statuses = users.read();
 				}
-			    );
-			},
-			interval
-		    );
-		    setInterval( function () {
-			    var statuses = null;
-			    try {
-				statuses = users.read();
-			    }
-			    catch (e) {
-			    	statuses = [];
-			    }
+				catch (e) {
+				    statuses = [];
+				}
 
-			    if ( statuses.length == 0 ) { return; }
+				if ( statuses.length == 0 ) { return; }
 
-			    for (i=0; i<statuses.length; ++i) {
-			    	var state = statuses[i];
-				var character =  new Character(state, icons)
-				character.translate.x = Math.floor(Math.random() * g.size().width );
-				character.translate.y = Math.floor(Math.random() * g.size().height);
-			    	characters.push(character);
-			    }
-		       },
-		       1000
-		   );
-		   setInterval( function () {
-			    g.draw.clear( g.color().convert(0, 0, 225) );
-			    for (i=0; i<characters.length; ++i) {
-				var character = characters[i];
-				character.rotate = character.rotate+10*Math.PI/180
+				for (i=0; i<statuses.length; ++i) {
+				    var state = statuses[i];
+				    var character =  new Character(state, icons)
+				    character.translate.x = Math.floor(Math.random() * g.size().width );
+				    character.translate.y = Math.floor(Math.random() * g.size().height);
+				    characters.push(character);
+				}
+			   },
+			   1000
+		       );
+		       setInterval( function () {
+				g.draw.clear( g.color().convert(0, 0, 225) );
+				for (i=0; i<characters.length; ++i) {
+				    var character = characters[i];
+				    character.rotate = character.rotate+10*Math.PI/180
 
-				g.transform().reset();
-				g.transform().translate({x:character.translate.x, y:character.translate.y});
-				g.transform().rotate(character.rotate); 
-				g.transform().translate({x:-16, y:-16});
-				g.draw.image(character.image(), {x:0, y:0}, {width:32, height:32});
-				
-			    }
-			},
-			60
-		    );
+				    g.transform().reset();
+				    g.transform().translate({x:character.translate.x, y:character.translate.y});
+				    g.transform().rotate(character.rotate); 
+				    g.transform().translate({x:-16, y:-16});
+				    g.draw.image(character.image(), {x:0, y:0}, {width:32, height:32});
+				    
+				}
+			    },
+			    60
+			);
+		    });
 		}
 
 		this.corkboard = function(interval) {
-		    var users    = new Users(500);
-		    var icons    = new Images();
-		    var g        = new Graphic(selector);
-		    var position = {x:0, y:0};
-		    var size     = {width:64, height:64};
+		    $(selector).after("<div>Start Corkboard</div>");
+		    $(selector+"~ div").filter("div")
+			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundImage:"url(img/cork.jpg)", borderRadius:"0.5em" })
+			.click(function () {
+			    $(selector+"~ div").filter("div").remove();
+			var users    = new Users(500);
+			var icons    = new Images();
+			var g        = new Graphic(selector);
+			var position = {x:0, y:0};
+			var size     = {width:64, height:64};
 
-		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
+			$(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
 
-		    users.update(
-			function (statuses) {
-			    // アップデート時にイメージを作成
-			    for (i=0; i<statuses.length; ++i) {
-				var state = statuses[i];
-				var key = state.user.id;
-				var src = state.user.profile_image_url;
-				icons.add(key, g.image().create(src));
-			    }
-			},
-			function (T) {
-			    $(selector+" ~ p").filter("p").remove();
-			    $(selector).after("<p>"+T.data.contents.error+"</p>");
-			    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
-			}
-		    );
-		    setInterval( function () {
-			    users.update(
-				function (statuses) {
-				    // アップデート時にイメージを作成
-				    for (i=0; i<statuses.length; ++i) {
-					var state = statuses[i];
-					var key = state.user.id;
-					var src = state.user.profile_image_url;
-					icons.add(key, g.image().create(src));
-				    }
-				},
-				function (T) {
-				    $(selector+" ~ p").filter("p").remove();
-				    $(selector).after("<p>"+T.data.contents.error+"</p>");
-				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+			users.update(
+			    function (statuses) {
+				// アップデート時にイメージを作成
+				for (i=0; i<statuses.length; ++i) {
+				    var state = statuses[i];
+				    var key = state.user.id;
+				    var src = state.user.profile_image_url;
+				    icons.add(key, g.image().create(src));
 				}
-			    );
-			},
-			interval
-		    );
-		    setInterval( function () {
-			    var statuses = null;
-			    try {
-				statuses = users.read();
+			    },
+			    function (T) {
+				$(selector+" ~ p").filter("p").remove();
+				$(selector).after("<p>"+T.data.contents.error+"</p>");
+				$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
 			    }
-			    catch (e) {
-			    	statuses = [];
-			    }
-
-			    if ( statuses.length == 0 ) { return; }
-
-			    for (i=0; i<statuses.length; ++i) {
-			    	var state = statuses[i];
-				position.x = Math.floor(Math.random() * (g.size().width - size.width));
-				position.y = Math.floor(Math.random() * (g.size().height - size.height));
-
+			);
+			setInterval( function () {
+				users.update(
+				    function (statuses) {
+					// アップデート時にイメージを作成
+					for (i=0; i<statuses.length; ++i) {
+					    var state = statuses[i];
+					    var key = state.user.id;
+					    var src = state.user.profile_image_url;
+					    icons.add(key, g.image().create(src));
+					}
+				    },
+				    function (T) {
+					$(selector+" ~ p").filter("p").remove();
+					$(selector).after("<p>"+T.data.contents.error+"</p>");
+					$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+				    }
+				);
+			    },
+			    interval
+			);
+			setInterval( function () {
+				var statuses = null;
 				try {
-				    g.draw.image(icons.get(state.user.id), position, size);
+				    statuses = users.read();
 				}
 				catch (e) {
+				    statuses = [];
 				}
-			    }
-			},
-			100
-		    );
+
+				if ( statuses.length == 0 ) { return; }
+
+				for (i=0; i<statuses.length; ++i) {
+				    var state = statuses[i];
+				    position.x = Math.floor(Math.random() * (g.size().width - size.width));
+				    position.y = Math.floor(Math.random() * (g.size().height - size.height));
+
+				    try {
+					g.draw.image(icons.get(state.user.id), position, size);
+				    }
+				    catch (e) {
+				    }
+				}
+			    },
+			    100
+			);
+		    });
 		}
 
 		// タイムライン表示 
