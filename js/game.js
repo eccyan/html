@@ -16,12 +16,11 @@ var game = {
 		    parameters.count = 50;
 
 		    var f = function (T) {
-			if (T.data.status.http_code == "400") {
-			    throw new Error(T.data.contents.error);
+			if (T.data.status.http_code == "200") {
+			    // since_id を更新する
+			    internal.oldSinceId = internal.sinceId;
+			    internal.sinceId = T.data.contents[0].id;
 			}
-			// since_id を更新する
-			internal.oldSinceId = internal.sinceId;
-			internal.sinceId = T.data.contents[0].id;
 			callback(T);
 		    }
 
@@ -47,11 +46,14 @@ var game = {
 		};
 
 		// 更新
-		this.update = function (callback) {
-		    var callback = callback || function () { };
+		this.update = function (success, error) {
+		    var success = success || function () { };
+		    var error   = error   || function () { };
 
 		    internal.twitter.statuses(function (T) {
-			if (!internal.twitter.updated()) { return; }
+			if (T.data.status.http_code != "200") {
+			    error(T);
+			}
 
 			var contents = T.data.contents;
 			var statuses = [];
@@ -67,7 +69,7 @@ var game = {
 			internal.buffer = internal.buffer.concat( sliced );
 			internal.position = 0;
 
-			callback(sliced);
+			success(sliced);
 		    });
 		}
 
@@ -250,23 +252,22 @@ var game = {
 		    var characters = [];
 
 		    setInterval( function () {
-			    try { 	
-				users.update( function (statuses) {
-					// アップデート時にイメージを作成
-					for (i=0; i<statuses.length; ++i) {
-					    var state = statuses[i];
-					    var key = state.user.id;
-					    var src = state.user.profile_image_url;
-					    icons.add(key, g.image().create(src));
-					}
+			    users.update(
+				function (statuses) {
+				    // アップデート時にイメージを作成
+				    for (i=0; i<statuses.length; ++i) {
+					var state = statuses[i];
+					var key = state.user.id;
+					var src = state.user.profile_image_url;
+					icons.add(key, g.image().create(src));
 				    }
-				);
-			    }
-			    catch (e) {
-			    	$(selector+" ~ p").filter("p").remove();
-			    	$(selector).after("<p>"+e.message+"</p>");
-			    	$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
-			    }
+				},
+				function (T) {
+				    $(selector+" ~ p").filter("p").remove();
+				    $(selector).after("<p>"+T.data.contents.error+"</p>");
+				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+				}
+			    );
 			},
 			interval
 		    );
@@ -318,32 +319,37 @@ var game = {
 
 		    $(g.canvas()).css( {backgroundImage: "url(img/cork.jpg)", backgroundRepeat: "repeat"} );
 
-		    users.update( function (statuses) {
-			    try {
-				// アップデート時にイメージを作成
-				for (i=0; i<statuses.length; ++i) {
-				    var state = statuses[i];
-				    var key = state.user.id;
-				    var src = state.user.profile_image_url;
-				    icons.add(key, g.image().create(src));
-				}
+		    users.update(
+			function (statuses) {
+			    // アップデート時にイメージを作成
+			    for (i=0; i<statuses.length; ++i) {
+				var state = statuses[i];
+				var key = state.user.id;
+				var src = state.user.profile_image_url;
+				icons.add(key, g.image().create(src));
 			    }
-			    catch (e) {
-			    	$(selector+" ~ p").filter("p").remove();
-			    	$(selector).after("<p>"+e.message+"</p>");
-			    	$(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
-			    }
+			},
+			function (T) {
+			    $(selector+" ~ p").filter("p").remove();
+			    $(selector).after("<p>"+T.data.contents.error+"</p>");
+			    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
 			}
 		    );
 		    setInterval( function () {
-			    users.update( function (statuses) {
+			    users.update(
+				function (statuses) {
 				    // アップデート時にイメージを作成
 				    for (i=0; i<statuses.length; ++i) {
-				    	var state = statuses[i];
+					var state = statuses[i];
 					var key = state.user.id;
 					var src = state.user.profile_image_url;
 					icons.add(key, g.image().create(src));
 				    }
+				},
+				function (T) {
+				    $(selector+" ~ p").filter("p").remove();
+				    $(selector).after("<p>"+T.data.contents.error+"</p>");
+				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
 				}
 			    );
 			},
@@ -538,6 +544,13 @@ var oauth = {
 		break;
 	}
 
+	var success = function(data, dataType) {
+	    callback({data:data, dataType:dataType, succeeded:true});
+	}
+	var error = function(XMLHttpRequest, textStatus, errorThrown) {
+	    callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
+	},
+
 	// API からURL を取得する
 	this.url(
 	    endpoint,
@@ -548,13 +561,9 @@ var oauth = {
 		    type     : method,
 		    url      : oauth.proxy(url),
 		    dataType : 'json',
-		    success  : function(data, dataType) {
-			callback({data:data, dataType:dataType, succeeded:true});
-		    },
-		    error    : function(XMLHttpRequest, textStatus, errorThrown) {
-			callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
-		    },
-		}
+		    success  : success,
+		    error    : error,
+		    }
 		$.ajax(options); 
 	    }
 	);
