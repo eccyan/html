@@ -431,9 +431,6 @@ var game = {
 
 			    if ( statuses.length == 0 ) { return; }
 
-			    // 100件まで表示させる。
-			    $(selector+"~ ul:gt("+count+")").remove();
-
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
 			    for (i=0; i<statuses.length; ++i) {
@@ -451,6 +448,9 @@ var game = {
 			    $(".timeline-text") .css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" });
 			    $("."+sliceId).css({ margin:"0 auto", width:"80%", listStyle:"none", color:"white", backgroundColor:"royalblue", opacity: "0.25" });
 			    $("."+sliceId).animate({ opacity: "1" }, 1000);
+
+			    // count件まで表示させる。
+			    $(timeline).children("div:gt("+count+")").remove();
 			},
 			500
 		    );
