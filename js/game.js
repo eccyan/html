@@ -467,7 +467,7 @@ var game = {
 
 		    $(selector).after("<div>Start Game</div>");
 		    $(selector+"~ div").filter("div")
-			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundColor:"blue", borderRadius:"0.5em" })
+			.css({ margin:"1em", fontSize:"3em", color:"white", backgroundColor:"blue", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
 			    content.execute(interval);
@@ -479,7 +479,7 @@ var game = {
 
 		    $(selector).after("<div>Start Corkboard</div>");
 		    $(selector+"~ div").filter("div")
-			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundImage:"url(img/cork.jpg)", borderRadius:"0.5em" })
+			.css({ margin:"1em", fontSize:"3em", color:"white", backgroundImage:"url(img/cork.jpg)", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
 			    content.execute(interval);
@@ -492,7 +492,7 @@ var game = {
 
 		    $(selector).after("<div>Timeline</div>");
 		    $(selector+"~ div").filter("div")
-			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundColor:"royalblue", borderRadius:"0.5em" })
+			.css({ margin:"1em", fontSize:"3em", color:"white", backgroundColor:"royalblue", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
 			    content.execute(interval, count);
