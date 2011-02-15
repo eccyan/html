@@ -399,12 +399,6 @@ var game = {
 		    var count    = count || 50;
 
 		    var users = new Users(500);
-
-		    $(selector).after("<div></div>");
-		    var timeline = $(selector+"~ div").filter("div").get(0);
-		    $(timeline).css({ minHeight:"4em", margin:"1em", backgroundColor:"steelblue", borderRadius:"0.5em", opacity:0 });
-		    $(timeline).animate({ opacity:1 }, 3000);
-
 		    // 最初にアップデート
 		    users.update();
 		    setInterval( function () {
@@ -438,19 +432,20 @@ var game = {
 			    var sliceId = "sliced-"+parseInt(now/1000);
 			    for (i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
-				$(timeline).prepend("<div class="+sliceId+"></div>");
-				var div = $(timeline).children("div").get(0);
-				$(div) 
-				    .append("<div class='timeline-image'><img src='"+state.user.profile_image_url+"' width=32px height=32px alt='"+state.user.profile_image_url+"'/></div>")
-				    .append("<div class='timeline-name'><a href='http://twitter.com/"+state.user.screen_name+"'>"+state.user.screen_name+"</a></div>")
-				    .append("<div class='timeline-text'>"+state.text+"</div>")
-				    .css({ clear: "both );
+				$(selector).after(
+					"<ul class="+sliceId+">"+
+					    "<li>"+
+						"<img src='"+state.user.profile_image_url+"' width=24px height=24px alt='"+state.user.profile_image_url+"'/>"+
+						"<span>"+state.user.name+"</span>"+
+					    "</li>"+
+					    "<li>"+
+						"<span>"+state.text+"</span>"+
+					    "</li>"+
+					"</ul>"
+				);
 			    }
-			    $(".timeline-image").css({ float:"left" });
-			    $(".timeline-name") .css({ height:"20px", color:"dimgray", textAlign:"left", fontSize:"0.8em" });
-			    $(".timeline-text") .css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" });
-			    $("."+sliceId).css({ margin:"0 auto", width:"80%", listStyle:"none", color:"white", backgroundColor:"royalblue", opacity: "0.25" });
-			    $("."+sliceId).animate({ opacity: "1" }, 1000);
+			    $("."+sliceId).css({ opacity: "0.25" });
+			    $("."+sliceId).animate({ opacity: "1" }, 2000);
 			},
 			500
 		    );
@@ -463,39 +458,39 @@ var game = {
     	var Binder = (function () {
 	    return function (selector) {
 		this.game = function(interval) {
-		    var content = new Game(selector);
+		    var content = new Game(interval);
 
 		    $(selector).after("<div>Start Game</div>");
 		    $(selector+"~ div").filter("div")
 			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundColor:"blue", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
-			    content.execute(interval);
+			    content.execute();
 			});
 		}
 
 		this.corkboard = function(interval) {
-		    var content = new Corkboard(selector);
+		    var content = new Corkboard(interval);
 
 		    $(selector).after("<div>Start Corkboard</div>");
 		    $(selector+"~ div").filter("div")
 			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundImage:"url(img/cork.jpg)", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
-			    content.execute(interval);
+			    content.execute();
 			});
 		}
 
 		// タイムライン表示 
 	    	this.timeline = function(interval, count) {
-		    var content = new Timeline(selector);
+		    var content = new Timeline(interval, count);
 
-		    $(selector).after("<div>Timeline</div>");
+		    $(selector).after("<div>Start Corkboard</div>");
 		    $(selector+"~ div").filter("div")
-			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundColor:"royalblue", borderRadius:"0.5em" })
+			.css({ margin:"0 auto", width:"30%", fontSize:"1em", color:"white", backgroundImage:"url(img/cork.jpg)", borderRadius:"0.5em" })
 			.click(function () {
 			    $(selector+"~ div").filter("div").remove();
-			    content.execute(interval, count);
+			    content.execute();
 			});
 		    ;
 
