@@ -444,7 +444,7 @@ var game = {
 				    .append("<div class='timeline-image'><img src='"+state.user.profile_image_url+"' width=32px height=32px alt='"+state.user.profile_image_url+"'/></div>")
 				    .append("<div class='timeline-name'><a href='http://twitter.com/"+state.user.screen_name+"'>"+state.user.screen_name+"</a></div>")
 				    .append("<div class='timeline-text'>"+state.text+"</div>")
-				    .css({ clear: "both );
+				    .css({ clear:"both" });
 			    }
 			    $(".timeline-image").css({ float:"left" });
 			    $(".timeline-name") .css({ height:"20px", color:"dimgray", textAlign:"left", fontSize:"0.8em" });
