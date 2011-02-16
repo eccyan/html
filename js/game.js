@@ -400,8 +400,10 @@ var game = {
 
 		    var users = new Users(500);
 
+		    var hover = false;
 		    $(selector).after("<div></div>");
 		    var timeline = $(selector+"~ div").filter("div").get(0);
+		    $(timeline).hover(function () { hover = true; }, function () { hover = false; });
 		    $(timeline).css({ minHeight:"4em", margin:"1em", backgroundColor:"steelblue", borderRadius:"0.5em", opacity:0 });
 		    $(timeline).animate({ opacity:1 }, 3000);
 
@@ -430,16 +432,30 @@ var game = {
 			    }
 
 			    if ( statuses.length == 0 ) { return; }
+			    if ( hover == true ) { return; }
 
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
 			    for (i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
+				// URL 置換
+				var urls = state.text.match(/(https?|ftp)(:\/\/[-_.!~*¥'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/g) || [];
+				for (i=0; i<urls.length; ++i) {
+				    var url = urls[i];
+				    state.text = state.text.replace(url, "<a href='"+url+"'>"+url+"</a>");
+				}
+				// リプライ置換
+				var replies = state.text.match(/\@[a-zA-Z0-9]+/g) || [];
+				for (i=0; i<replies.length; ++i) {
+				    var reply = replies[i];
+				    var name  = replies[i].match(/[a-zA-Z0-9]+/);
+				    state.text = state.text.replace(reply, "<a href='http://twitter.com/"+name+"/' target='_blank'>"+reply+"</a>");
+				}
 				$(timeline).prepend("<div class="+sliceId+"></div>");
 				var div = $(timeline).children("div").get(0);
 				$(div) 
 				    .append("<div class='timeline-image'><img src='"+state.user.profile_image_url+"' width=32px height=32px alt='"+state.user.profile_image_url+"'/></div>")
-				    .append("<div class='timeline-name'><a href='http://twitter.com/"+state.user.screen_name+"'>"+state.user.screen_name+"</a></div>")
+				    .append("<div class='timeline-name'><a href='http://twitter.com/"+state.user.screen_name+"/' target='_blank'>"+state.user.screen_name+"</a></div>")
 				    .append("<div class='timeline-text'>"+state.text+"</div>")
 				    .css({ clear:"both" });
 			    }
