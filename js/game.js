@@ -628,7 +628,7 @@ var oauth = {
 	}
 	var error = function(XMLHttpRequest, textStatus, errorThrown) {
 	    callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
-	},
+	}
 
 	// API からURL を取得する
 	this.url(
