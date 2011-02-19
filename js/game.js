@@ -65,7 +65,7 @@ var game = {
 			// バッファリング
 			statuses.reverse();
 			var sliced = statuses.slice( 0, internal.capacity-internal.position-1 );
-			internal.buffer = internal.buffer.slice( Math.min(internal.position+1, internal.capacity-1), Math.min(internal.buffer.length, internal.capacity-1) );
+			internal.buffer = internal.buffer.slice( Math.min(internal.position, internal.capacity-1), Math.min(internal.buffer.length-1, internal.capacity-1) );
 			internal.buffer = internal.buffer.concat( sliced );
 			internal.position = 0;
 
@@ -78,11 +78,11 @@ var game = {
 		    var count = count || 1;
 
 		    // バッファ容量を超える場合
-		    if (internal.position >= internal.capacity-1) {
+		    if (internal.position > internal.capacity-1) {
 			throw new RangeError("read position is out of capacity.");
 		    }
 
-		    var readed = internal.buffer.slice(internal.position, Math.min(count+internal.position, internal.capacity-internal.position-1));
+		    var readed = internal.buffer.slice(internal.position, Math.min(count+internal.position, internal.capacity-internal.position));
 		    internal.position = Math.min(internal.position+readed.length, internal.capacity-1);
 
 		    return readed;
