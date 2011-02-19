@@ -65,7 +65,7 @@ var game = {
 			// バッファリング
 			statuses.reverse();
 			var sliced = statuses.slice( 0, internal.capacity-internal.position-1 );
-			internal.buffer = internal.buffer.slice( Math.min(internal.position+1, internal.capacity-1), Math.min(internal.buffer.length, internal.capacity-1) );
+			internal.buffer = internal.buffer.slice( Math.min(internal.position, internal.capacity-1), Math.min(internal.buffer.length-1, internal.capacity-1) );
 			internal.buffer = internal.buffer.concat( sliced );
 			internal.position = 0;
 
