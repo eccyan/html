@@ -11,6 +11,8 @@ var game = {
 
 		// ホームタイムライン取得
 		this.statuses = function (callback) {
+		    var callback = callback || function () {};
+
 		    var parameters = {};
 		    if (internal.sinceId) { parameters.since_id = internal.sinceId; }
 		    parameters.count = 50;
@@ -30,6 +32,17 @@ var game = {
 		// 更新された
 		this.updated = function () {
 		    return internal.oldSinceId != internal.sinceId;
+		}
+
+		this.favorite = function (id, callback) {
+		    var callback = callback || function () {};
+		    
+		    var parameters = {};
+		    var f = function (T) {
+			callback(T);
+		    }
+
+		    oauth.post('http://api.twitter.com/1/favorites/create/'+id+'.json', parameters, f); 
 		}
 	    }
 	})();
@@ -539,12 +552,25 @@ var game = {
 				$(div) 
 				    .append("<div class='timeline-image'><img src='"+state.user.profile_image_url+"' width=32px height=32px alt='"+state.user.profile_image_url+"'/></div>")
 				    .append("<div class='timeline-name'><a href='http://twitter.com/"+state.user.screen_name+"/' target='_blank'>"+state.user.screen_name+"</a></div>")
+				    .append("<div class='timeline-fav'>☆</div>")
 				    .append("<div class='timeline-text'>"+state.text+"</div>")
 				    .css({ clear:"both" });
 			    }
 			    $(".timeline-image").css({ float:"left" });
-			    $(".timeline-name") .css({ height:"20px", color:"dimgray", textAlign:"left", fontSize:"0.8em" });
-			    $(".timeline-text") .css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" });
+			    $(".timeline-name").css({ height:"10px", color:"dimgray", textAlign:"left", fontSize:"0.8em" });
+			    $(".timeline-text").css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" });
+
+			    $(".timeline-fav")
+				.css({ float:"right", color:"yellow", textAlign:"left", fontSize:"2em" })
+				.click(function () {
+				    var twitter = new Twitter();
+				    var fav = $(this);
+				    twitter.favorite(state.id_str, function (T) {
+					if (T.data.status.http_code == "200") {
+					    fav.text("★").css({color:"yellow", opacity:0}).animate({opacity:1}, 1000);
+					}
+				    });
+				});
 			    $("."+sliceId).css({ margin:"0 auto", width:"80%", listStyle:"none", color:"white", backgroundColor:"royalblue", opacity: "0.25" });
 			    $("."+sliceId).animate({ opacity: "1" }, 1000);
 
@@ -658,6 +684,12 @@ var oauth = {
 		parameters = arguments[1] || [];
 		callback   = arguments[2] || function (T) { };
 		break;
+	    case 4: 
+		endpoint   = arguments[0];
+		parameters = arguments[1] || [];
+		callback   = arguments[2] || function (T) { };
+		method     = arguments[3] || 'GET';
+		break;
 	}
 
 	// Query String の作成
@@ -728,6 +760,49 @@ var oauth = {
 		    }
 		$.ajax(options); 
 	    }
+	);
+    },
+
+    post : function () {
+	var method     = 'POST';
+	var endpoint   = null;
+	var parameters = [];
+	var callback   = function (T) { };
+	switch (arguments.length) {
+	    case 2: 
+		endpoint = arguments[0];
+		callback = arguments[1];
+		break;
+	    case 3: 
+		endpoint   = arguments[0];
+		parameters = arguments[1];
+		callback   = arguments[2];
+		break;
+	}
+
+	var success = function(data, dataType) {
+	    callback({data:data, dataType:dataType, succeeded:true});
+	}
+	var error = function(XMLHttpRequest, textStatus, errorThrown) {
+	    callback({XMLHttpRequest:XMLHttpRequest, textStatus:textStatus, errorThrown:errorThrown, succeeded:false});
+	}
+
+	// API からURL を取得する
+	this.url(
+	    endpoint,
+	    parameters,
+	    function (url) {
+		// 送信
+		var options = {
+		    type       : method,
+		    url        : oauth.proxy(url),
+		    dataType   : 'json',
+		    success    : success,
+		    error      : error,
+		    }
+		$.ajax(options); 
+	    },
+	    'POST'
 	);
     },
 };
