@@ -24,7 +24,7 @@ var game = {
 			callback(T);
 		    }
 
-		    oauth.send('http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
+		    oauth.get('http://api.twitter.com/1/statuses/home_timeline.json', parameters, f); 
 		}
 
 		// 更新された
@@ -57,7 +57,7 @@ var game = {
 
 			var contents = T.data.contents;
 			var statuses = [];
-			for (i=0; i<contents.length; ++i) {
+			for (var i=0; i<contents.length; ++i) {
 			    var state = contents[i];
 			    statuses.push(state);
 			}
@@ -212,26 +212,27 @@ var game = {
 		    },
 		}
 
-		this.size      = function() { return { width : internal.width, height : internal.height }; }
-		this.canvas    = function() { return internal.canvas; }
-		this.color     = function() { return internal.color; }
+		this.size      = function () { return { width : internal.width, height : internal.height }; }
+		this.canvas    = function () { return internal.canvas; }
+		this.color     = function () { return internal.color; }
 		this.transform = function () { return internal.transform; }
 		this.image     = function () { return internal.image; }
 	    }
 	})();
 
-	var Character = (function () {
+	var Actor = (function () {
 	    return function (state, images) {
 	    	var internal =  {
-		    state  : state,
-		    images : images,
-		    accel  : {dx:0, dx:0}
+		    state     : state,
+		    images    : images,
+		    rotate    : 0,
+		    scale     : { x:1, y:1 }, 
+		    translate : { x:0, y:0 },
+		    delta     : {rotate:0, scale:{x:0, y:0}, translate:{x:0, y:0}},
+		    actions   : [],
+		    acted     : null,
 		}
 
-		// 行列忘れたからとりあえず
-		this.rotate    = 0;
-		this.scale     = { sx:0, sy:0 }; 
-		this.translate = { x:0, y:0 };
 
 		this.text = function() {
 		    return internal.state.text;
@@ -241,43 +242,73 @@ var game = {
 		    var key = internal.state.user.id;
 		    return images.get(key);
 		}
+
+		this.action = function(action) {
+		    actions.push(action);
+		}
+
+		this.act = function() {
+		    // 経過時間の取得
+		    var elapsed = 0;
+		    if (internal.acted) {
+		    	elapsed = (new Date) - internal.acted;
+		    }
+
+		    // アクションを更新
+		    var updated = [];
+		    for (var i=0; i<internal.actions.length; ++i) {
+			var action = internal.actions[i];
+			action.elapsed += elapsed; 
+			if (!action.finished) {
+			    var res = action.act({rotate:internal.rotate, sacale:internal.scale, translate:internal.translate, delta:internal.delta});
+			    internal.rotate    = res.rotate;
+			    internal.scale     = res.scale;
+			    internal.translate = res.translate;
+			    internal.delta     = res.delta;
+
+			    updated.push(action);
+			}
+		    }
+		    internal.actions = updated;
+
+		    internal.acted = new Date;
+		}
+
+		this.scale     = function () { return internal.scale; }
+		this.rotate    = function () { return internal.rotate; }
+		this.translate = function () { return internal.translate; }
+		this.delta     = function () { return internal.delta; }
+	    }
+	})();
+
+	var Action = (function () {
+	    return function (act, time) {
+		var internal = {
+		    act  : act,
+		    time : time,
+		}
+
+		this.act = function (T) {
+		    return internal.act(T)
+		}
+
+		this.elapsed  = 0;
+		this.finished = function () { return elapsed > time; }
 	    }
 	})();
 
 	// コンテンツ
 	var Game = (function () {
 	    return function (selector) {
-	    	this.execute = function(interval) {
-		    var users = new Users(500);
-		    var icons = new Images();
-		    var g     = new Graphic(selector);
-
-		    var characters = [];
-
-		    setInterval( function () {
-			    users.update(
-				function (statuses) {
-				    // アップデート時にイメージを作成
-				    for (i=0; i<statuses.length; ++i) {
-					var state = statuses[i];
-					var key = state.user.id;
-					var src = state.user.profile_image_url;
-					icons.add(key, g.image().create(src));
-				    }
-				},
-				function (T) {
-				    $(selector+" ~ p").filter("p").remove();
-				    $(selector).after("<p>"+T.data.contents.error+"</p>");
-				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
-				}
-			    );
-			},
-			interval
-		    );
-		    setInterval( function () {
+	    	var internal = {
+		    users : new Users(500),
+		    icons : new Images(),
+		    actor : {
+			actors : [],
+			update : function () {
 			    var statuses = null;
 			    try {
-				statuses = users.read();
+				statuses = internal.users.read();
 			    }
 			    catch (e) {
 				statuses = [];
@@ -285,27 +316,75 @@ var game = {
 
 			    if ( statuses.length == 0 ) { return; }
 
-			    for (i=0; i<statuses.length; ++i) {
+			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
-				var character =  new Character(state, icons)
-				character.translate.x = Math.floor(Math.random() * g.size().width );
-				character.translate.y = Math.floor(Math.random() * g.size().height);
-				characters.push(character);
+				var actor = new Actor(state, internal.icons)
+				this.actors.push(actor);
 			    }
+			},
+		    },
+		}
+	    	this.execute = function(interval) {
+		    var g     = new Graphic(selector);
+
+		    // 最初にアップデート
+		    internal.users.update(
+			function (statuses) {
+			    // アップデート時にイメージを作成
+			    for (var i=0; i<statuses.length; ++i) {
+				var state = statuses[i];
+				var key = state.user.id;
+				var src = state.user.profile_image_url;
+				internal.icons.add(key, g.image().create(src));
+			    }
+			},
+			function (T) {
+			    $(selector+" ~ p").filter("p").remove();
+			    $(selector).after("<p>"+T.data.contents.error+"</p>");
+			    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red", opacity:1});
+			    $(selector+" ~ p").filter("p").animate({opacity:0}, 10000);
+			}
+		    );
+		    setInterval( function () {
+			    internal.users.update(
+				function (statuses) {
+				    // アップデート時にイメージを作成
+				    for (var i=0; i<statuses.length; ++i) {
+					var state = statuses[i];
+					var key = state.user.id;
+					var src = state.user.profile_image_url;
+					internal.icons.add(key, g.image().create(src));
+				    }
+				},
+				function (T) {
+				    $(selector+" ~ p").filter("p").remove();
+				    $(selector).after("<p>"+T.data.contents.error+"</p>");
+				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red", opacity:1});
+				    $(selector+" ~ p").filter("p").animate({opacity:0}, 10000);
+				}
+			    );
+			},
+			interval
+		    );
+		    setInterval( function () {
+			    internal.actor.update();
 		       },
 		       1000
-		   );
-		   setInterval( function () {
+		    );
+		    setInterval( function () {
 			    g.draw.clear( g.color().convert(0, 0, 225) );
-			    for (i=0; i<characters.length; ++i) {
-				var character = characters[i];
-				character.rotate = character.rotate+10*Math.PI/180
+
+			    var actors = internal.actor.actors;
+			    for (var i=0; i<actors.length; ++i) {
+				var actor = actors[i];
+				actor.act();
 
 				g.transform().reset();
-				g.transform().translate({x:character.translate.x, y:character.translate.y});
-				g.transform().rotate(character.rotate); 
+				g.transform().translate(actor.translate());
+				g.transform().rotate(actor.rotate()); 
 				g.transform().translate({x:-16, y:-16});
-				g.draw.image(character.image(), {x:0, y:0}, {width:32, height:32});
+				g.transform().scale(actor.scale()); 
+				g.draw.image(actor.image(), {x:0, y:0}, {width:32, height:32});
 				
 			    }
 			},
@@ -329,7 +408,7 @@ var game = {
 		    users.update(
 			function (statuses) {
 			    // アップデート時にイメージを作成
-			    for (i=0; i<statuses.length; ++i) {
+			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
 				var key = state.user.id;
 				var src = state.user.profile_image_url;
@@ -339,14 +418,15 @@ var game = {
 			function (T) {
 			    $(selector+" ~ p").filter("p").remove();
 			    $(selector).after("<p>"+T.data.contents.error+"</p>");
-			    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+			    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red", opacity:1});
+			    $(selector+" ~ p").filter("p").animate({opacity:0}, 10000);
 			}
 		    );
 		    setInterval( function () {
 			    users.update(
 				function (statuses) {
 				    // アップデート時にイメージを作成
-				    for (i=0; i<statuses.length; ++i) {
+				    for (var i=0; i<statuses.length; ++i) {
 					var state = statuses[i];
 					var key = state.user.id;
 					var src = state.user.profile_image_url;
@@ -356,7 +436,8 @@ var game = {
 				function (T) {
 				    $(selector+" ~ p").filter("p").remove();
 				    $(selector).after("<p>"+T.data.contents.error+"</p>");
-				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red", opacity:1});
+				    $(selector+" ~ p").filter("p").animate({opacity:0}, 10000);
 				}
 			    );
 			},
@@ -373,7 +454,7 @@ var game = {
 
 			    if ( statuses.length == 0 ) { return; }
 
-			    for (i=0; i<statuses.length; ++i) {
+			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
 				position.x = Math.floor(Math.random() * (g.size().width - size.width));
 				position.y = Math.floor(Math.random() * (g.size().height - size.height));
@@ -416,7 +497,8 @@ var game = {
 				function (T) {
 				    $(selector+" ~ p").filter("p").remove();
 				    $(selector).after("<p>"+T.data.contents.error+"</p>");
-				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red"});
+				    $(selector+" ~ p").filter("p").css({color:"white", backgroundColor:"red", opacity:1});
+				    $(selector+" ~ p").filter("p").animate({opacity:0}, 10000);
 				}
 			    );
 			},
@@ -436,17 +518,18 @@ var game = {
 
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
-			    for (i=0; i<statuses.length; ++i) {
+			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
 				// URL 置換
+				if (!state.text) { state.text = ""; }
 				var urls = state.text.match(/(https?|ftp)(:\/\/[-_.!~*¥'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/g) || [];
-				for (i=0; i<urls.length; ++i) {
+				for (var i=0; i<urls.length; ++i) {
 				    var url = urls[i];
 				    state.text = state.text.replace(url, "<a href='"+url+"'>"+url+"</a>");
 				}
 				// リプライ置換
 				var replies = state.text.match(/\@[a-zA-Z0-9]+/g) || [];
-				for (i=0; i<replies.length; ++i) {
+				for (var i=0; i<replies.length; ++i) {
 				    var reply = replies[i];
 				    var name  = replies[i].match(/[a-zA-Z0-9]+/);
 				    state.text = state.text.replace(reply, "<a href='http://twitter.com/"+name+"/' target='_blank'>"+reply+"</a>");
@@ -606,7 +689,7 @@ var oauth = {
 	$.getJSON(url, callback_);
     },
 
-    send : function () {
+    get : function () {
 	var method     = 'GET';
 	var endpoint   = null;
 	var parameters = [];
@@ -637,11 +720,11 @@ var oauth = {
 	    function (url) {
 		// 送信
 		var options = {
-		    type     : method,
-		    url      : oauth.proxy(url),
-		    dataType : 'json',
-		    success  : success,
-		    error    : error,
+		    type       : method,
+		    url        : oauth.proxy(url),
+		    dataType   : 'json',
+		    success    : success,
+		    error      : error,
 		    }
 		$.ajax(options); 
 	    }
