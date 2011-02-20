@@ -493,11 +493,10 @@ var game = {
 		    var count    = count || 50;
 
 		    var users = new Users(500);
+		    var stop = false;
 
-		    var hover = false;
 		    $(selector).after("<div></div>");
 		    var timeline = $(selector+"~ div").filter("div").get(0);
-		    $(timeline).hover(function () { hover = true; }, function () { hover = false; });
 		    $(timeline).css({ minHeight:"4em", margin:"1em", backgroundColor:"steelblue", borderRadius:"0.5em", opacity:0 });
 		    $(timeline).animate({ opacity:1 }, 3000);
 
@@ -527,14 +526,13 @@ var game = {
 			    }
 
 			    if ( statuses.length == 0 ) { return; }
-			    if ( hover == true ) { return; }
+			    if ( stop ) { return; }
 
 			    var now = new Date; 
 			    var sliceId = "sliced-"+parseInt(now/1000);
 			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
 				// URL 置換
-				if (!state.text) { state.text = ""; }
 				var urls = state.text.match(/(https?|ftp)(:\/\/[-_.!~*¥'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/g) || [];
 				for (var i=0; i<urls.length; ++i) {
 				    var url = urls[i];
@@ -556,9 +554,15 @@ var game = {
 				    .append("<div class='timeline-text'>"+state.text+"</div>")
 				    .css({ clear:"both" });
 			    }
-			    $(".timeline-image").css({ float:"left" });
-			    $(".timeline-name").css({ height:"10px", color:"dimgray", textAlign:"left", fontSize:"0.8em" });
-			    $(".timeline-text").css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" });
+			    $(".timeline-image")
+				.css({ float:"left" })
+				.click(function () { stop =! stop; });
+			    $(".timeline-name")
+				.css({ height:"10px", color:"dimgray", textAlign:"left", fontSize:"0.8em" })
+				.click(function () { stop =! stop; });
+			    $(".timeline-text")
+				.css({ minHeight:"4em", color:"white", textAlign:"left", fontSize:"0.8em" })
+				.click(function () { stop =! stop; });
 
 			    $(".timeline-fav")
 				.css({ float:"right", color:"yellow", textAlign:"left", fontSize:"2em" })
