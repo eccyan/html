@@ -234,7 +234,7 @@ var game = {
 	})();
 
 	var Actor = (function () {
-	    return function (state, images) {
+	    return function (state, images, actions) {
 	    	var internal =  {
 		    state     : state,
 		    images    : images,
@@ -242,8 +242,8 @@ var game = {
 		    scale     : { x:1, y:1 }, 
 		    translate : { x:0, y:0 },
 		    delta     : {rotate:0, scale:{x:0, y:0}, translate:{x:0, y:0}},
-		    actions   : [],
-		    acted     : null,
+		    actions   : actions || [],
+		    alive     : true,
 		}
 
 
@@ -257,56 +257,61 @@ var game = {
 		}
 
 		this.action = function(action) {
-		    actions.push(action);
+		    internal.actions.push(action);
 		}
 
 		this.act = function() {
-		    // 経過時間の取得
-		    var elapsed = 0;
-		    if (internal.acted) {
-		    	elapsed = (new Date) - internal.acted;
-		    }
-
 		    // アクションを更新
 		    var updated = [];
 		    for (var i=0; i<internal.actions.length; ++i) {
 			var action = internal.actions[i];
-			action.elapsed += elapsed; 
-			if (!action.finished) {
-			    var res = action.act({rotate:internal.rotate, sacale:internal.scale, translate:internal.translate, delta:internal.delta});
-			    internal.rotate    = res.rotate;
-			    internal.scale     = res.scale;
-			    internal.translate = res.translate;
-			    internal.delta     = res.delta;
+			var T = {
+			    rotate:internal.rotate,
+			    scale:internal.scale,
+			    translate:internal.translate,
+			    delta:internal.delta,
+			    alive:internal.alive,
+			}
+			var res = action.act(T);
+			internal.rotate    = res.rotate;
+			internal.scale     = res.scale;
+			internal.translate = res.translate;
+			internal.delta     = res.delta;
+			internal.alive     = res.alive;
 
+			if ( !action.finished() ) {
 			    updated.push(action);
 			}
 		    }
 		    internal.actions = updated;
-
-		    internal.acted = new Date;
 		}
 
 		this.scale     = function () { return internal.scale; }
 		this.rotate    = function () { return internal.rotate; }
 		this.translate = function () { return internal.translate; }
 		this.delta     = function () { return internal.delta; }
+		this.alive     = function () { return internal.alive; }
 	    }
 	})();
 
 	var Action = (function () {
 	    return function (act, time) {
 		var internal = {
-		    act  : act,
-		    time : time,
+		    act     : act,
+		    time    : time || null,
+		    acted   : null,
+		    elapsed : 0,
 		}
 
 		this.act = function (T) {
-		    return internal.act(T)
+		    if (internal.acted) {
+		    	internal.elapsed += (new Date()) - internal.acted;
+		    }
+		    internal.acted = new Date();
+		    return internal.act(T, internal.elapsed)
 		}
 
-		this.elapsed  = 0;
-		this.finished = function () { return elapsed > time; }
+		this.finished = function () { return time ? internal.elapsed > time : false; }
 	    }
 	})();
 
@@ -316,6 +321,43 @@ var game = {
 	    	var internal = {
 		    users : new Users(500),
 		    icons : new Images(),
+		    actions : {
+		    	random : function (T) {
+			    T.translate.x = Math.floor( Math.random() * 400 );
+			    T.translate.y = Math.floor( Math.random() * 400 );
+			    return T;
+			},
+		    	around : function (T) {
+			    if ( !Math.floor( Math.random() * 10) ) {
+				T.delta.translate.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
+				T.delta.translate.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
+			    }
+			    return T;
+			},
+		    	pump : function (T) {
+			    if ( !Math.floor( Math.random() * 10) ) {
+				T.delta.scale.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 2 );
+				T.delta.scale.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 2 );
+			    }
+			    return T;
+			},
+			move : function (T) {
+			    T.translate.x += T.delta.translate.x;
+			    T.translate.y += T.delta.translate.y;
+			    return T;
+			},
+			scale : function (T) {
+			    T.scale.x += T.delta.scale.x;
+			    T.scale.y += T.delta.scale.y;
+			    return T;
+			},
+			kill : function (T, elapsed) {
+			    if (elapsed > 6000) {
+				T.alive = false;
+			    }
+			    return T;
+			}
+		    },
 		    actor : {
 			actors : [],
 			update : function () {
@@ -332,13 +374,20 @@ var game = {
 			    for (var i=0; i<statuses.length; ++i) {
 				var state = statuses[i];
 				var actor = new Actor(state, internal.icons)
+				actor.action( new Action(internal.actions.random, 1) );
+				actor.action( new Action(internal.actions.around, 10000) );
+				actor.action( new Action(internal.actions.pump, 10000) );
+				actor.action( new Action(internal.actions.move, Math.floor( Math.random() * 20000 + 15000 ) ) );
+				actor.action( new Action(internal.actions.scale, Math.floor( Math.random() * 5000 + 1000 ) ) );
+				actor.action( new Action(internal.actions.kill) );
 				this.actors.push(actor);
 			    }
 			},
 		    },
 		}
 	    	this.execute = function(interval) {
-		    var g     = new Graphic(selector);
+		    var g = new Graphic(selector);
+
 
 		    // 最初にアップデート
 		    internal.users.update(
@@ -381,6 +430,16 @@ var game = {
 		    );
 		    setInterval( function () {
 			    internal.actor.update();
+			    var actors = internal.actor.actors;
+			    var alives = [];
+			    for (var i=0; i<actors.length; ++i) {
+				var actor = actors[i];
+				if ( actor.alive() ) {
+				    alives.push(actor);
+				}
+			    }
+
+			    internal.actor.actors = alives;
 		       },
 		       1000
 		    );
