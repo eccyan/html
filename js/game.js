@@ -335,13 +335,19 @@ var game = {
 			    return T;
 			},
 		    	pump : function (T) {
-			    if ( !Math.floor( Math.random() * 10) ) {
-				T.delta.scale.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 2 );
-				T.delta.scale.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 2 );
+			    if ( !Math.floor( Math.random() * 5) ) {
+				T.delta.scale.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
+				T.delta.scale.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
 			    }
 			    return T;
 			},
-			move : function (T) {
+		    	spin : function (T) {
+			    if ( !Math.floor( Math.random() * 10) ) {
+				T.delta.rotate = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
+			    }
+			    return T;
+			},
+			translate : function (T) {
 			    T.translate.x += T.delta.translate.x;
 			    T.translate.y += T.delta.translate.y;
 			    return T;
@@ -349,6 +355,10 @@ var game = {
 			scale : function (T) {
 			    T.scale.x += T.delta.scale.x;
 			    T.scale.y += T.delta.scale.y;
+			    return T;
+			},
+			rotate : function (T) {
+			    T.rotate += T.delta.rotate;
 			    return T;
 			},
 			kill : function (T, elapsed) {
@@ -377,8 +387,10 @@ var game = {
 				actor.action( new Action(internal.actions.random, 1) );
 				actor.action( new Action(internal.actions.around, 10000) );
 				actor.action( new Action(internal.actions.pump, 10000) );
-				actor.action( new Action(internal.actions.move, Math.floor( Math.random() * 20000 + 15000 ) ) );
+				actor.action( new Action(internal.actions.spin, 10000) );
+				actor.action( new Action(internal.actions.translate, Math.floor( Math.random() * 20000 + 15000 ) ) );
 				actor.action( new Action(internal.actions.scale, Math.floor( Math.random() * 5000 + 1000 ) ) );
+				actor.action( new Action(internal.actions.rotate, Math.floor( Math.random() * 5000 + 1000 ) ) );
 				actor.action( new Action(internal.actions.kill) );
 				this.actors.push(actor);
 			    }
