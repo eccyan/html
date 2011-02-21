@@ -352,7 +352,7 @@ var game = {
 			    return T;
 			},
 			kill : function (T, elapsed) {
-			    if (elapsed > 6000) {
+			    if (elapsed > 10000) {
 				T.alive = false;
 			    }
 			    return T;
