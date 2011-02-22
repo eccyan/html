@@ -466,7 +466,7 @@ var game = {
 				g.transform().reset();
 				g.transform().translate(actor.translate());
 				g.transform().rotate(actor.rotate()); 
-				g.transform().translate({x:-16, y:-16});
+				g.transform().translate({x:32*actor.scale().x/-2, y:32*actor.scale().y/-2});
 				g.transform().scale(actor.scale()); 
 				g.draw.image(actor.image(), {x:0, y:0}, {width:32, height:32});
 				
