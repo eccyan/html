@@ -15,7 +15,7 @@ var game = {
 
 		    var parameters = {};
 		    if (internal.sinceId) { parameters.since_id = internal.sinceId; }
-		    parameters.count = 50;
+		    parameters.count = 200;
 
 		    var f = function (T) {
 			if (T.data.status.http_code == "200") {
@@ -262,28 +262,28 @@ var game = {
 
 		this.act = function() {
 		    // アクションを更新
-		    var updated = [];
-		    for (var i=0; i<internal.actions.length; ++i) {
-			var action = internal.actions[i];
-			var T = {
-			    rotate:internal.rotate,
-			    scale:internal.scale,
-			    translate:internal.translate,
-			    delta:internal.delta,
-			    alive:internal.alive,
-			}
-			var res = action.act(T);
-			internal.rotate    = res.rotate;
-			internal.scale     = res.scale;
-			internal.translate = res.translate;
-			internal.delta     = res.delta;
-			internal.alive     = res.alive;
-
-			if ( !action.finished() ) {
-			    updated.push(action);
-			}
+		    if (internal.actions.length == 0) {
+			return;
 		    }
-		    internal.actions = updated;
+
+		    var action = internal.actions[0];
+		    var T = {
+			rotate:internal.rotate,
+			scale:internal.scale,
+			translate:internal.translate,
+			delta:internal.delta,
+			alive:internal.alive,
+		    }
+		    var res = action.act(T);
+		    internal.rotate    = res.rotate;
+		    internal.scale     = res.scale;
+		    internal.translate = res.translate;
+		    internal.delta     = res.delta;
+		    internal.alive     = res.alive;
+
+		    if ( action.finished() ) {
+			internal.actions.shift();
+		    }
 		}
 
 		this.scale     = function () { return internal.scale; }
@@ -328,23 +328,10 @@ var game = {
 			    return T;
 			},
 		    	around : function (T) {
-			    if ( !Math.floor( Math.random() * 10) ) {
-				T.delta.translate.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
-				T.delta.translate.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
-			    }
-			    return T;
-			},
-		    	pump : function (T) {
-			    if ( !Math.floor( Math.random() * 5) ) {
-				T.delta.scale.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
-				T.delta.scale.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
-			    }
-			    return T;
-			},
-		    	spin : function (T) {
-			    if ( !Math.floor( Math.random() * 10) ) {
-				T.delta.rotate = (Math.floor( Math.random() * 2 ) ? -1 : 1) * Math.random();
-			    }
+			    T.delta.translate.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
+			    T.delta.translate.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
+			    T.delta.rotate = Math.atan2(T.delta.translate.x, T.delta.translate.y);
+
 			    return T;
 			},
 			translate : function (T) {
@@ -385,12 +372,10 @@ var game = {
 				var state = statuses[i];
 				var actor = new Actor(state, internal.icons)
 				actor.action( new Action(internal.actions.random, 1) );
-				actor.action( new Action(internal.actions.around, 10000) );
-				actor.action( new Action(internal.actions.pump, 10000) );
-				actor.action( new Action(internal.actions.spin, 10000) );
-				actor.action( new Action(internal.actions.translate, Math.floor( Math.random() * 20000 + 15000 ) ) );
-				actor.action( new Action(internal.actions.scale, Math.floor( Math.random() * 5000 + 1000 ) ) );
-				actor.action( new Action(internal.actions.rotate, Math.floor( Math.random() * 5000 + 1000 ) ) );
+				actor.action( new Action(internal.actions.around, 1) );
+				actor.action( new Action(internal.actions.rotate,    5000) );
+				actor.action( new Action(internal.actions.translate, 5000) );
+				actor.action( new Action(internal.actions.scale,     5000) );
 				actor.action( new Action(internal.actions.kill) );
 				this.actors.push(actor);
 			    }
