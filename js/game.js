@@ -328,9 +328,9 @@ var game = {
 			    return T;
 			},
 		    	around : function (T) {
-			    T.delta.translate.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
-			    T.delta.translate.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 4 );
-			    T.delta.rotate = Math.atan2(T.delta.translate.x, T.delta.translate.y);
+			    T.delta.translate.x = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 7 + 1 );
+			    T.delta.translate.y = (Math.floor( Math.random() * 2 ) ? -1 : 1) *  Math.floor( Math.random() * 7 + 1);
+			    T.delta.rotate = Math.atan2(T.delta.translate.y, T.delta.translate.x);
 
 			    return T;
 			},
